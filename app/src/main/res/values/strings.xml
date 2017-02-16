@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">TeleControl</string>
+    <string name="gyro">Gyroscope</string>
+    <string name="accel">Accelerometer</string>
+    <string name="value">Value</string>
+    <color name="bg">#e8e8e8</color>
+    <color name="titlebg">#ea00ff</color>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
