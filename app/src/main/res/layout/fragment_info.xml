@@ -2,7 +2,9 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_height="match_parent"
     android:layout_width="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:elevation="10dp"
+    android:background="@drawable/rectshape">
     <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -23,7 +25,8 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:text="@string/accel"
-                    android:textStyle="bold"/>
+                    android:textStyle="bold"
+                    android:background="@drawable/rectshape"/>
                 <TextView
                     android:layout_width="0dip"
                     android:layout_height="wrap_content"
@@ -176,5 +179,49 @@
                 android:text="0.00"/>
         </TableRow>
     </TableLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_weight="18">
+        <TableRow
+            android:paddingTop="4dip"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+            <TextView
+                android:layout_width="0dip"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="@string/multi"
+                android:textStyle="bold"/>
+            <TextView
+                android:layout_width="0dip"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_weight="1"
+                android:text="@string/value"/>
+        </TableRow>
+        <TableRow
+            android:paddingTop="4dip"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+            <TextView
+                android:layout_width="0dip"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="@string/dfingers"
+                android:textStyle="bold"/>
+            <TextView
+                android:layout_width="0dip"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_weight="1"
+                android:text="0"/>
+        </TableRow>
     </LinearLayout>
 </LinearLayout>

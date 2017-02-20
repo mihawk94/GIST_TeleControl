@@ -1,37 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:tools="http://schemas.android.com/tools"
-            android:id="@+id/buttons_fragment"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:context="gist.telecontrol.ButtonsFragment">
-
-<TextView android:layout_width="match_parent"
-          android:layout_height="match_parent"
-          android:text="Aquí botones" />
-</ScrollView>
--->
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@android:color/white">
-    <HorizontalScrollView
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:layout_alignParentStart="true"
-        android:elevation="12dp"
-        android:translationZ="12dp"
-        android:id="@+id/scrollView"
-        android:background="@android:color/white">
-
-    </HorizontalScrollView>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:orientation="vertical">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:layout_below="@+id/scrollView">
-
+        android:layout_weight="1">
     </LinearLayout>
-
-</RelativeLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"></LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"></LinearLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1">
+    </LinearLayout>
+</LinearLayout>
