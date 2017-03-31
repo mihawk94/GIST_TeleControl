@@ -2,6 +2,7 @@ package gist.telecontrol;
 
 import android.content.Context;
 import android.os.Handler;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.view.View;
 import android.support.v7.app.AppCompatActivity;
@@ -9,18 +10,18 @@ import android.os.Bundle;
 
 public class Networking implements Runnable{
 
-    int count;
     Handler handler;
-    TextView counter;
+    TextView textDevices;
+    LinearLayout devices;
 
-    public Networking(int count, Handler handler, TextView counter){
-        this.count = count;
+    public Networking(Handler handler, TextView textDevices, LinearLayout devices){
         this.handler = handler;
-        this.counter = counter;
+        this.textDevices = textDevices;
+        this.devices = devices;
     }
     public void run(){
-            count++;
-            counter.setText("" + count);
-            handler.postDelayed(this, 500);
+        handler.post(new Searching(handler, textDevices, devices));
+        Thread requestDevices = new Thread(new Requesting());
+        Thread discoverDevices = new Thread(new Discovering());
     }
 }

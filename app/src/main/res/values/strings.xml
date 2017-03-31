@@ -5,8 +5,10 @@
     <string name="value">Value</string>
     <string name="multi">Multitouch</string>
     <string name="dfingers">Detected fingers</string>
-    <string name="multizone">Multitouch\nzone</string>
+    <string name="multizone">0</string>
     <string name="connect">Connect!</string>
+    <string name="search">Searching</string>
+    <string name="device">Choose device..</string>
     <color name="bg">#e8e8e8</color>
     <color name="bg2">#e2e1e1</color>
     <color name="bg3">#d2d2d2</color>
