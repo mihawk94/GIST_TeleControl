@@ -1,3 +1,4 @@
+/*
 package gist.telecontrol;
 
 import android.content.Context;
@@ -10,9 +11,10 @@ import android.os.Bundle;
 
 public class Networking implements Runnable{
 
-    Handler handler;
-    TextView textDevices;
-    LinearLayout devices;
+    private Handler handler;
+    private TextView textDevices;
+    private LinearLayout devices;
+
 
     public Networking(Handler handler, TextView textDevices, LinearLayout devices){
         this.handler = handler;
@@ -20,8 +22,9 @@ public class Networking implements Runnable{
         this.devices = devices;
     }
     public void run(){
-        handler.post(new Searching(handler, textDevices, devices));
-        Thread requestDevices = new Thread(new Requesting());
+        Thread requestDevices = new Thread(new Requesting(handler, textDevices, devices));
+        Thread listenDevices = new Thread(new Replying());
         Thread discoverDevices = new Thread(new Discovering());
     }
 }
+*/

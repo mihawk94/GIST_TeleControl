@@ -1,19 +1,22 @@
+/*
 package gist.telecontrol;
 
 import android.os.Handler;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.view.View;
+import android.widget.Toast;
 
-public class Searching implements Runnable{
+public class SearchUI implements Runnable{
 
+    private String title;
     private Handler handler;
     private TextView textDevices;
     private LinearLayout devices;
-    private final static String LAN = "Searching LAN devices";
     private int count = 0;
 
-    public Searching(Handler handler, TextView textDevices, LinearLayout devices){
+    public SearchUI(String title, Handler handler, TextView textDevices, LinearLayout devices){
+        this.title = title;
         this.handler = handler;
         this.textDevices = textDevices;
         this.devices = devices;
@@ -21,17 +24,18 @@ public class Searching implements Runnable{
 
     public void run(){
         if(count == 0){
-            textDevices.setText(LAN + ".");
+            textDevices.setText(title + ".");
             count++;
         }
         else if(count == 1){
-            textDevices.setText(LAN + "..");
+            textDevices.setText(title + "..");
             count++;
         }
         else{
-            textDevices.setText(LAN + "...");
+            textDevices.setText(title + "...");
             count = 0;
         }
         handler.postDelayed(this, 500);
     }
 }
+*/
