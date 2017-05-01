@@ -1,5 +1,6 @@
 package gist.telecontrol;
 
+import android.bluetooth.BluetoothAdapter;
 import android.graphics.Typeface;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -41,6 +42,7 @@ public class MainActivity extends AppCompatActivity{
 
         mTvButton.setOnClickListener(mButtonListener);
         mPhoneButton.setOnClickListener(mButtonListener);
+
     }
 
 
