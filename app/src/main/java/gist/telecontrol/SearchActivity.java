@@ -31,6 +31,9 @@ public class SearchActivity extends Activity {
         dynamicUIThread.start();
 
         Intent i = new Intent(this, ConnectionService.class);
+        i.setAction("Requesting");
+        i.putExtra("name", getIntent().getStringExtra("name"));
+        startService(i);
 
     }
 

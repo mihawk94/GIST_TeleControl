@@ -45,7 +45,7 @@ public class DynamicUIThread extends Thread{
                 try{
                     Thread.sleep(300);
                 } catch (InterruptedException iex){
-
+                    mFinish = true;
                 }
             }
         }
