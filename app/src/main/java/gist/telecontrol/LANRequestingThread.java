@@ -10,37 +10,23 @@ import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 
-public class LANBroadcastingThread extends Thread{
+public class LANRequestingThread extends Thread{
 
     private boolean mFinish;
     private String mName;
     private Service mService;
     private DatagramSocket mSocket;
-    private int mCode;
 
-    public LANBroadcastingThread(Service service, String name, int code){
+    public LANRequestingThread(Service service, String name){
         mService = service;
         mName = name;
-        mCode = code;
     }
 
     public void run(){
-
-        /* Implement this
-        switch(mCode){
-            case 0: CLIENT
-                break;
-            case 1: SERVER
-                break;
-            default: ERROR_MSG
-                break;
-        }
-        */
 
         if(getMainInterface() == null){
             //Give information about the error
@@ -61,7 +47,7 @@ public class LANBroadcastingThread extends Thread{
             return;
         }
 
-        byte [] request = new String("REQ: " + mName).getBytes();
+        byte [] request = new String("REQUEST: " + mName).getBytes();
 
         DatagramPacket requestPacket = new DatagramPacket(request, request.length);
 
@@ -80,8 +66,8 @@ public class LANBroadcastingThread extends Thread{
 
         mFinish = false;
 
-        LANReceivingThread lanReceivingThread = new LANReceivingThread(mService, mSocket, 0);
-        lanReceivingThread.start();
+        LANReplyingThread lanReplyingThread = new LANReplyingThread(mService, mSocket);
+        lanReplyingThread.start();
 
         while(!mFinish){
 
@@ -104,6 +90,7 @@ public class LANBroadcastingThread extends Thread{
         }
 
         mSocket.close();
+
     }
 
     public NetworkInterface getMainInterface(){

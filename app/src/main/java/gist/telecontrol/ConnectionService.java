@@ -10,8 +10,12 @@ public class ConnectionService extends Service {
 
         switch(intent.getAction()){
             case "Requesting":
-                LANBroadcastingThread lanBroadcastingThread = new LANBroadcastingThread(this, intent.getStringExtra("name"), 0);
-                lanBroadcastingThread.start();
+                LANRequestingThread lanRequestingThread = new LANRequestingThread(this, intent.getStringExtra("name"));
+                lanRequestingThread.start();
+                break;
+            case "Replying":
+                LANReplyingThread lanReplyingThread = new LANReplyingThread(this, intent.getStringExtra("name"));
+                lanReplyingThread.start();
                 break;
             default:
                 break;

@@ -1,6 +1,7 @@
 package gist.telecontrol;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.widget.TextView;
@@ -16,6 +17,11 @@ public class ServerActivity extends Activity{
         setFonts();
 
         ((TextView)(findViewById(R.id.main_title))).setText(getIntent().getStringExtra("name") + ": attached devices");
+
+        Intent i = new Intent(this, ConnectionService.class);
+        i.setAction("Replying");
+        i.putExtra("name", getIntent().getStringExtra("name"));
+        startService(i);
 
     }
 
