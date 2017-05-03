@@ -63,6 +63,7 @@ public class LANReplyingThread extends Thread{
                 Log.d("Logging", "Reply received from one device!");
             } catch (IOException e) {
                 mSocket.close();
+                Log.d("Logging", "Problem with client receiving socket");
                 //Give information about the error.
                 return;
             }
