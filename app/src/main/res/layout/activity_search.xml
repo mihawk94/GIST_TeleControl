@@ -46,11 +46,15 @@
                     android:id="@+id/lan_devices_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text=""/>
+                    android:text="Touch the button to start searching"/>
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
                 <Button
+                    android:id="@+id/lan_btn"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="STOP"/>
+                    android:text="SEARCH"/>
             </LinearLayout>
             <View
                 android:background="#000000"
@@ -97,7 +101,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Showing paired devices"/>
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
                 <Button
+                    android:id="@+id/bluetooth_btn"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="SCAN"/>

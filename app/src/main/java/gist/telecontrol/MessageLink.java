@@ -12,7 +12,7 @@ public class MessageLink extends Handler{
     public static final int BLUETOOTH = 1;
     public static final String LAN_TEXT = "Searching";
     public static final String BLUETOOTH_TEXT = "Scanning";
-    public boolean mLANMessaging = true;
+    public boolean mLANMessaging = false;
     public boolean mBluetoothMessaging = false;
 
     public MessageLink(Activity activity){
@@ -30,6 +30,14 @@ public class MessageLink extends Handler{
             default:
                 break;
         }
+    }
+
+    public boolean getLANMessaging(){
+        return mLANMessaging;
+    }
+
+    public boolean getBluetoothMessaging(){
+        return mBluetoothMessaging;
     }
 
     public void setLANMessaging(boolean lanMessaging){

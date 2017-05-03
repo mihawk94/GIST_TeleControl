@@ -3,19 +3,30 @@ package gist.telecontrol;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
+import android.util.Log;
 
 public class ConnectionService extends Service {
 
+    private LANRequestingThread mLANRequestingThread;
+    private LANReplyingThread mLANReplyingThread;
+
     public int onStartCommand(Intent intent, int flags, int startId){
+
+        Log.d("Logging", "Service called");
 
         switch(intent.getAction()){
             case "Requesting":
-                LANRequestingThread lanRequestingThread = new LANRequestingThread(this, intent.getStringExtra("name"));
-                lanRequestingThread.start();
+                Log.d("Logging", "Requesting called");
+                mLANRequestingThread = new LANRequestingThread(this, intent.getStringExtra("name"));
+                mLANRequestingThread.start();
                 break;
             case "Replying":
-                LANReplyingThread lanReplyingThread = new LANReplyingThread(this, intent.getStringExtra("name"));
-                lanReplyingThread.start();
+                Log.d("Logging", "Replying called");
+                mLANReplyingThread = new LANReplyingThread(this, intent.getStringExtra("name"));
+                mLANReplyingThread.start();
+                break;
+            case "StopRequesting":
+                mLANRequestingThread.finish();
                 break;
             default:
                 break;

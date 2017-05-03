@@ -20,7 +20,7 @@ public class DynamicUIThread extends Thread{
         while(!mFinish){
 
             for (int i = 0; i < 3; i++) {
-                Message msg = Message.obtain();
+                Message msg;
                 String message = "";
                 switch (i) {
                     case 0:
@@ -34,10 +34,11 @@ public class DynamicUIThread extends Thread{
                         break;
                 }
 
-
+                msg = Message.obtain();
                 msg.what = mHandler.LAN;
                 sendMessage(msg, message);
 
+                msg = Message.obtain();
                 msg.what = mHandler.BLUETOOTH;
                 sendMessage(msg, message);
 
@@ -57,7 +58,7 @@ public class DynamicUIThread extends Thread{
         msg.sendToTarget();
     }
 
-    public void setFinish(boolean finish){
-        mFinish = finish;
+    public void finish(){
+        mFinish = true;
     }
 }

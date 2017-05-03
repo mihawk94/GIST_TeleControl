@@ -3,6 +3,7 @@ package gist.telecontrol;
 import android.app.Service;
 import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -47,6 +48,7 @@ public class LANReplyingThread extends Thread{
 
     private void runClient(){
 
+
         mFinish = false;
 
         while(!mFinish){
@@ -55,7 +57,9 @@ public class LANReplyingThread extends Thread{
             DatagramPacket replyPacket = new DatagramPacket(reply, reply.length);
 
             try {
+                Log.d("Logging", "Waiting for replies...");
                 mSocket.receive(replyPacket);
+                Log.d("Logging", "Reply received from one device!");
             } catch (IOException e) {
                 mSocket.close();
                 //Give information about the error.
@@ -63,6 +67,7 @@ public class LANReplyingThread extends Thread{
             }
 
             Intent intent = new Intent("LAN_DEVICEREPLY");
+
 
             intent.putExtra("address", new String(replyPacket.getAddress().getHostAddress()));
             intent.putExtra("name", new String(replyPacket.getData()).split(" ")[1]);
@@ -89,23 +94,27 @@ public class LANReplyingThread extends Thread{
             }
 
             try {
+                Log.d("Logging", "Listening to requests..");
                 mSocket.receive(replyPacket);
             } catch (IOException e) {
                 mSocket.close();
                 //Give information about the error.
-                return;
+                continue;
             }
+
+            String requestName = new String(replyPacket.getData());
 
             mSocket.connect(replyPacket.getAddress(), 48181);
 
             replyPacket.setData(new String("REPLY: " + mName).getBytes());
 
             try {
+                Log.d("Logging", "Sending info to " + replyPacket.getAddress() + ": " + requestName);
                 mSocket.send(replyPacket);
             } catch (IOException e) {
                 mSocket.close();
                 //Give information about the error.
-                return;
+                continue;
             }
 
         }
@@ -114,8 +123,9 @@ public class LANReplyingThread extends Thread{
 
     }
 
-    public void setFinish(boolean finish){
-        mFinish = finish;
+    public void finish(){
+        mFinish = true;
+        if(!mSocket.isClosed()) mSocket.close();
     }
 
 }

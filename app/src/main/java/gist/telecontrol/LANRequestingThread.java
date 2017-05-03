@@ -1,6 +1,7 @@
 package gist.telecontrol;
 
 import android.app.Service;
+import android.util.Log;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -20,6 +21,7 @@ public class LANRequestingThread extends Thread{
     private String mName;
     private Service mService;
     private DatagramSocket mSocket;
+    private LANReplyingThread mLANReplyingThread;
 
     public LANRequestingThread(Service service, String name){
         mService = service;
@@ -29,6 +31,7 @@ public class LANRequestingThread extends Thread{
     public void run(){
 
         if(getMainInterface() == null){
+            Log.d("Logging", "Error getting main interface");
             //Give information about the error
             return;
         }
@@ -36,6 +39,7 @@ public class LANRequestingThread extends Thread{
         InetAddress ipaddr = getMainAddress(getMainInterface().getInetAddresses());
 
         if(ipaddr == null){
+            Log.d("Logging", "Error getting main address");
             //Give information about the error
             return;
         }
@@ -43,6 +47,7 @@ public class LANRequestingThread extends Thread{
         InetAddress braddr = getBroadcastAddress(getMainInterface().getInterfaceAddresses(), ipaddr);
 
         if(braddr == null){
+            Log.d("Logging", "Error getting broadcast address");
             //Give information about the error
             return;
         }
@@ -66,12 +71,13 @@ public class LANRequestingThread extends Thread{
 
         mFinish = false;
 
-        LANReplyingThread lanReplyingThread = new LANReplyingThread(mService, mSocket);
-        lanReplyingThread.start();
+        mLANReplyingThread = new LANReplyingThread(mService, mSocket);
+        mLANReplyingThread.start();
 
         while(!mFinish){
 
             try{
+                Log.d("Logging", "Broadcasting...");
                 mSocket.setBroadcast(true);
                 mSocket.send(requestPacket);
             }
@@ -123,8 +129,10 @@ public class LANRequestingThread extends Thread{
         return null;
     }
 
-    public void setFinish(boolean finish){
-        mFinish = finish;
+    public void finish(){
+        mFinish = true;
+        mLANReplyingThread.finish();
+        mSocket.close();
     }
 
 }
