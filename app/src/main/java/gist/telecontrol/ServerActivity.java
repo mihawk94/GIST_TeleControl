@@ -23,6 +23,8 @@ public class ServerActivity extends Activity{
         i.putExtra("name", getIntent().getStringExtra("name"));
         startService(i);
 
+        setResult(RESULT_OK);
+
     }
 
     protected void onResume(){

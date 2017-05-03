@@ -61,7 +61,7 @@ public class SearchActivity extends Activity {
         mConnectionFilter.addAction(BluetoothDevice.ACTION_FOUND);
         mConnectionFilter.addAction("LAN_DEVICEREPLY");
 
-        mReceiver = new DataReceiver();
+        mReceiver = new DataReceiver(this);
     }
 
     public void setButtons(){

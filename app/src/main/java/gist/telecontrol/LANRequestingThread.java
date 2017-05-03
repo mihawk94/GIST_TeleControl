@@ -1,6 +1,7 @@
 package gist.telecontrol;
 
 import android.app.Service;
+import android.content.Context;
 import android.util.Log;
 
 import java.io.IOException;
@@ -19,12 +20,12 @@ public class LANRequestingThread extends Thread{
 
     private boolean mFinish;
     private String mName;
-    private Service mService;
+    private Context mContext;
     private DatagramSocket mSocket;
     private LANReplyingThread mLANReplyingThread;
 
-    public LANRequestingThread(Service service, String name){
-        mService = service;
+    public LANRequestingThread(Context context, String name){
+        mContext = context;
         mName = name;
     }
 
@@ -71,7 +72,7 @@ public class LANRequestingThread extends Thread{
 
         mFinish = false;
 
-        mLANReplyingThread = new LANReplyingThread(mService, mSocket);
+        mLANReplyingThread = new LANReplyingThread(mContext, mSocket);
         mLANReplyingThread.start();
 
         while(!mFinish){
@@ -94,8 +95,6 @@ public class LANRequestingThread extends Thread{
             }
 
         }
-
-        mSocket.close();
 
     }
 
@@ -130,9 +129,9 @@ public class LANRequestingThread extends Thread{
     }
 
     public void finish(){
+        if(!mSocket.isClosed()) mSocket.close();
         mFinish = true;
         mLANReplyingThread.finish();
-        mSocket.close();
     }
 
 }

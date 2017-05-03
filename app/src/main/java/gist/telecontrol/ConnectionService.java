@@ -3,6 +3,7 @@ package gist.telecontrol;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 public class ConnectionService extends Service {
@@ -27,6 +28,14 @@ public class ConnectionService extends Service {
                 break;
             case "StopRequesting":
                 mLANRequestingThread.finish();
+                break;
+            case "StopReplying":
+                mLANReplyingThread.finish();
+
+
+                Intent enableButton = new Intent("ENABLE_TVBUTTON");
+                LocalBroadcastManager.getInstance(this).sendBroadcast(enableButton);
+
                 break;
             default:
                 break;

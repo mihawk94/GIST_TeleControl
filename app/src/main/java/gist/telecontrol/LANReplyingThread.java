@@ -1,6 +1,7 @@
 package gist.telecontrol;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -13,19 +14,19 @@ import java.net.SocketException;
 public class LANReplyingThread extends Thread{
 
     private DatagramSocket mSocket;
-    private Service mService;
+    private Context mContext;
     private boolean mFinish;
     private String mName;
     private int mCode;
 
-    public LANReplyingThread(Service service, DatagramSocket socket){
-        mService = service;
+    public LANReplyingThread(Context context, DatagramSocket socket){
+        mContext = context;
         mSocket = socket;
         mCode = 0;
     }
 
-    public LANReplyingThread(Service service, String name){
-        mService = service;
+    public LANReplyingThread(Context context, String name){
+        mContext = context;
         mName = name;
         mCode = 1;
     }
@@ -68,10 +69,9 @@ public class LANReplyingThread extends Thread{
 
             Intent intent = new Intent("LAN_DEVICEREPLY");
 
-
             intent.putExtra("address", new String(replyPacket.getAddress().getHostAddress()));
             intent.putExtra("name", new String(replyPacket.getData()).split(" ")[1]);
-            LocalBroadcastManager.getInstance(mService).sendBroadcast(intent);
+            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
 
         }
 
@@ -79,19 +79,20 @@ public class LANReplyingThread extends Thread{
 
     private void runServer(){
 
+        try {
+            mSocket = new DatagramSocket(48182);
+        } catch (SocketException e) {
+            Log.d("Logging", "Maybe port is already used");
+            //Give information about the error
+            return;
+        }
+
         mFinish = false;
 
         while(!mFinish){
 
             byte [] reply = new byte[100];
             DatagramPacket replyPacket = new DatagramPacket(reply, reply.length);
-
-            try {
-                mSocket = new DatagramSocket(48182);
-            } catch (SocketException e) {
-                //Give information about the error
-                return;
-            }
 
             try {
                 Log.d("Logging", "Listening to requests..");
@@ -104,12 +105,14 @@ public class LANReplyingThread extends Thread{
 
             String requestName = new String(replyPacket.getData());
 
-            mSocket.connect(replyPacket.getAddress(), 48181);
+            replyPacket.setPort(48181);
+
+            //mSocket.connect(replyPacket.getAddress(), 48181);
 
             replyPacket.setData(new String("REPLY: " + mName).getBytes());
 
             try {
-                Log.d("Logging", "Sending info to " + replyPacket.getAddress() + ": " + requestName);
+                Log.d("Logging", "Sending info to " + replyPacket.getAddress().getHostAddress() + ":" + replyPacket.getPort() + ": " + requestName);
                 mSocket.send(replyPacket);
             } catch (IOException e) {
                 mSocket.close();
@@ -119,13 +122,11 @@ public class LANReplyingThread extends Thread{
 
         }
 
-        mSocket.close();
-
     }
 
     public void finish(){
-        mFinish = true;
         if(!mSocket.isClosed()) mSocket.close();
+        mFinish = true;
     }
 
 }
