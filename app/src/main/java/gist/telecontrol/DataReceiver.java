@@ -33,7 +33,10 @@ public class DataReceiver extends BroadcastReceiver{
     }
 
     public void lan_deviceReply(Context context, Intent intent){
+
         Toast.makeText(mContext, "" + intent.getStringExtra("name") + ": " + intent.getStringExtra("address"), Toast.LENGTH_LONG).show();
+
+
     }
 
     public void enable_tvButton(Context context, Intent intent){

@@ -57,13 +57,14 @@ public class LANRequestingThread extends Thread{
 
         DatagramPacket requestPacket = new DatagramPacket(request, request.length);
 
+
         requestPacket.setAddress(braddr);
 
         requestPacket.setPort(48182);
 
+
         try{
             mSocket = new DatagramSocket(48181);
-            mSocket.connect(braddr, 48182);
         }
         catch(SocketException se){
             //Give information about the error

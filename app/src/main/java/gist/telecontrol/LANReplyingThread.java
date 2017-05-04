@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
+import java.util.Arrays;
 
 public class LANReplyingThread extends Thread{
 
@@ -18,6 +19,8 @@ public class LANReplyingThread extends Thread{
     private boolean mFinish;
     private String mName;
     private int mCode;
+    private LANConnectionThread mLANConnectionThread;
+
 
     public LANReplyingThread(Context context, DatagramSocket socket){
         mContext = context;
@@ -59,6 +62,7 @@ public class LANReplyingThread extends Thread{
 
             try {
                 Log.d("Logging", "Waiting for replies...");
+                Log.d("Logging", mSocket.getLocalAddress().getHostAddress() + " " + mSocket.getLocalPort());
                 mSocket.receive(replyPacket);
                 Log.d("Logging", "Reply received from one device!");
             } catch (IOException e) {
@@ -80,6 +84,9 @@ public class LANReplyingThread extends Thread{
 
     private void runServer(){
 
+        mLANConnectionThread = new LANConnectionThread(mContext);
+        mLANConnectionThread.start();
+
         try {
             mSocket = new DatagramSocket(48182);
         } catch (SocketException e) {
@@ -94,6 +101,7 @@ public class LANReplyingThread extends Thread{
 
             byte [] reply = new byte[100];
             DatagramPacket replyPacket = new DatagramPacket(reply, reply.length);
+            int bytes;
 
             try {
                 Log.d("Logging", "Listening to requests..");
@@ -101,24 +109,30 @@ public class LANReplyingThread extends Thread{
             } catch (IOException e) {
                 mSocket.close();
                 //Give information about the error.
-                continue;
+                Log.d("Logging", e.toString());
+                return;
             }
 
-            String requestName = new String(replyPacket.getData());
+            replyPacket.getLength();
+
+            //String requestName = new String(replyPacket.getData());
+
+            byte [] word = Arrays.copyOfRange(reply, 0, replyPacket.getLength());
+
+            String requestName = new String(word);
 
             replyPacket.setPort(48181);
 
-            //mSocket.connect(replyPacket.getAddress(), 48181);
-
-            replyPacket.setData(new String("REPLY: " + mName).getBytes());
+            replyPacket.setData(new String("REPLY: " + mName + ).getBytes());
 
             try {
-                Log.d("Logging", "Sending info to " + replyPacket.getAddress().getHostAddress() + ":" + replyPacket.getPort() + ": " + requestName);
+                Log.d("Logging", "Sending info to " + replyPacket.getAddress().getHostAddress() + ":" + replyPacket.getPort() + " " + requestName);
                 mSocket.send(replyPacket);
             } catch (IOException e) {
                 mSocket.close();
                 //Give information about the error.
-                continue;
+                Log.d("Logging", e.toString());
+                return;
             }
 
         }
