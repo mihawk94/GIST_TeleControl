@@ -4,7 +4,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
@@ -12,9 +11,11 @@ import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
+
+import java.util.ArrayList;
 
 public class SearchActivity extends Activity {
 
@@ -27,6 +28,9 @@ public class SearchActivity extends Activity {
 
     private Button mScanButton, mSearchButton;
     private ButtonListener mButtonListener;
+    private ConnectionListener mConnectionListener;
+    private ListView mDevices;
+    private AdapterLANDevice mLANDeviceAdapter;
 
     private final static int REQUEST_ENABLE_BT = 1;
     private final static int REQUEST_DEVICE_CONNECTION = 2;
@@ -39,21 +43,37 @@ public class SearchActivity extends Activity {
 
         setFonts();
 
+        setListing();
+
         setReceiver();
 
         setButtons();
 
         setBluetoothPermissions();
 
+        setListeners();
+
     }
 
-    public void setFonts(){
+    private void setFonts(){
         TextView tv=(TextView)findViewById(R.id.main_title);
         Typeface face=Typeface.createFromAsset(getAssets(), "fonts/orange_juice_2.ttf");
         tv.setTypeface(face);
     }
 
-    public void setReceiver(){
+    private void setListing(){
+
+        mDevices = (ListView) findViewById(R.id.lanDevicesListView);
+
+        ArrayList<LANDevice> deviceList = new ArrayList<LANDevice>();
+
+        mLANDeviceAdapter = new AdapterLANDevice(this, deviceList);
+
+        mDevices.setAdapter(mLANDeviceAdapter);
+
+    }
+
+    private void setReceiver(){
 
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
@@ -61,10 +81,10 @@ public class SearchActivity extends Activity {
         mConnectionFilter.addAction(BluetoothDevice.ACTION_FOUND);
         mConnectionFilter.addAction("LAN_DEVICEREPLY");
 
-        mReceiver = new DataReceiver(this);
+        mReceiver = new DataReceiver(this, mLANDeviceAdapter);
     }
 
-    public void setButtons(){
+    private void setButtons(){
 
         mHandler = new MessageLink(this);
 
@@ -77,7 +97,7 @@ public class SearchActivity extends Activity {
         mScanButton.setOnClickListener(mButtonListener);
     }
 
-    public void setBluetoothPermissions(){
+    private void setBluetoothPermissions(){
 
         String[] permissionsToRequest =
                 {
@@ -96,6 +116,13 @@ public class SearchActivity extends Activity {
         if(!allPermissionsGranted) {
             ActivityCompat.requestPermissions(this, permissionsToRequest, REQUEST_PERMISSIONS);
         }
+    }
+
+    private void setListeners(){
+
+        mConnectionListener = new ConnectionListener();
+
+        mDevices.setOnItemClickListener(mConnectionListener);
     }
 
     protected void onDestroy(){

@@ -123,7 +123,7 @@ public class LANReplyingThread extends Thread{
 
             replyPacket.setPort(48181);
 
-            replyPacket.setData(new String("REPLY: " + mName + ).getBytes());
+            replyPacket.setData(new String("REPLY: " + mName).getBytes());
 
             try {
                 Log.d("Logging", "Sending info to " + replyPacket.getAddress().getHostAddress() + ":" + replyPacket.getPort() + " " + requestName);

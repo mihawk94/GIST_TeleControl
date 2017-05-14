@@ -7,14 +7,21 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.Toast;
 
 public class DataReceiver extends BroadcastReceiver{
 
     private Context mContext;
+    private AdapterLANDevice mDevices;
 
     public DataReceiver(Context context){
         mContext = context;
+    }
+
+    public DataReceiver(Context context, AdapterLANDevice devices){
+        mContext = context;
+        mDevices = devices;
     }
 
     public void onReceive(Context context, Intent intent) {
@@ -33,10 +40,9 @@ public class DataReceiver extends BroadcastReceiver{
     }
 
     public void lan_deviceReply(Context context, Intent intent){
-
-        Toast.makeText(mContext, "" + intent.getStringExtra("name") + ": " + intent.getStringExtra("address"), Toast.LENGTH_LONG).show();
-
-
+        mDevices.add(new LANDevice(intent.getStringExtra("name"), intent.getStringExtra("address")));
+        mDevices.notifyDataSetChanged();
+        Toast.makeText(mContext, intent.getStringExtra("name") + "\n" + intent.getStringExtra("address"), Toast.LENGTH_LONG).show();
     }
 
     public void enable_tvButton(Context context, Intent intent){
