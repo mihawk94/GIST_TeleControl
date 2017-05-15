@@ -48,6 +48,7 @@ public class MainActivity extends Activity {
     public void setReceiver(){
 
         mConnectionFilter = new IntentFilter();
+
         mConnectionFilter.addAction("ENABLE_TVBUTTON");
 
         mReceiver = new DataReceiver(this);
@@ -70,7 +71,6 @@ public class MainActivity extends Activity {
             return;
         }
         if(requestCode == REQUEST_TV){
-            mButtonListener.disable();
             disableButtonColor();
             Intent i = new Intent(this, ConnectionService.class);
             i.setAction("StopReplying");

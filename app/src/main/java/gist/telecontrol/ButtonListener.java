@@ -13,20 +13,26 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.HashSet;
+
 public class ButtonListener implements View.OnClickListener{
 
     private Context mContext;
     private MessageLink mHandler;
     private DynamicUIThread mDynamicUIThread;
     private boolean mEnabled = true;
+    private AdapterLANDevice mLANDeviceAdapter;
+    private HashSet<String> mLANDeviceHashSet;
 
     public ButtonListener(Context context){
         mContext = context;
     }
 
-    public ButtonListener(Context context, MessageLink handler){
+    public ButtonListener(Context context, MessageLink handler, AdapterLANDevice lanDeviceAdapter, HashSet<String> lanDeviceHashSet){
         mContext = context;
         mHandler = handler;
+        mLANDeviceAdapter = lanDeviceAdapter;
+        mLANDeviceHashSet = lanDeviceHashSet;
     }
 
     public void onClick(View v) {
@@ -77,6 +83,9 @@ public class ButtonListener implements View.OnClickListener{
             case R.id.lan_btn:
                 if(((Button)v).getText().equals("SEARCH")){
                     Log.d("Logging", "LAN: Searching..");
+
+                    mLANDeviceAdapter.clear();
+                    mLANDeviceHashSet.clear();
 
                     mHandler.setLANMessaging(true);
                     mDynamicUIThread = new DynamicUIThread(mHandler);
@@ -134,11 +143,4 @@ public class ButtonListener implements View.OnClickListener{
         }
     }
 
-    public void enable(){
-        mEnabled = true;
-    }
-
-    public void disable(){
-        mEnabled = false;
-    }
 }

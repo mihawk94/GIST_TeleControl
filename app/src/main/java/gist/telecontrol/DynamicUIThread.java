@@ -52,7 +52,7 @@ public class DynamicUIThread extends Thread{
         }
     }
 
-    public void sendMessage(Message msg, String value){
+    private void sendMessage(Message msg, String value){
         msg.obj = value;
         msg.setTarget(mHandler);
         msg.sendToTarget();

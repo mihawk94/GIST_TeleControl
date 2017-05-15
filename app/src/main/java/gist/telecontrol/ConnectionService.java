@@ -6,10 +6,14 @@ import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 public class ConnectionService extends Service {
 
     private LANRequestingThread mLANRequestingThread;
     private LANReplyingThread mLANReplyingThread;
+    private LANConnectionThread mLANConnectionThread;
 
     public int onStartCommand(Intent intent, int flags, int startId){
 
@@ -25,6 +29,17 @@ public class ConnectionService extends Service {
                 Log.d("Logging", "Replying called");
                 mLANReplyingThread = new LANReplyingThread(this, intent.getStringExtra("name"));
                 mLANReplyingThread.start();
+                break;
+            case "Connection":
+                Log.d("Logging", "Connection called");
+                try{
+                    mLANConnectionThread = new LANConnectionThread(this,
+                            InetAddress.getByName(intent.getStringExtra("address")),
+                            intent.getStringExtra("name"));
+                }
+                catch(UnknownHostException uhe){
+                    //Give information about the error
+                }
                 break;
             case "StopRequesting":
                 mLANRequestingThread.finish();

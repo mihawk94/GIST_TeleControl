@@ -130,8 +130,9 @@ public class LANRequestingThread extends Thread{
     }
 
     public void finish(){
-        if(!mSocket.isClosed()) mSocket.close();
+
         mFinish = true;
+        if(!mSocket.isClosed()) mSocket.close();
         mLANReplyingThread.finish();
     }
 

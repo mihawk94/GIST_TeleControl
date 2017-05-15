@@ -16,6 +16,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class SearchActivity extends Activity {
 
@@ -31,6 +32,7 @@ public class SearchActivity extends Activity {
     private ConnectionListener mConnectionListener;
     private ListView mDevices;
     private AdapterLANDevice mLANDeviceAdapter;
+    private HashSet<String> mLANDeviceHashSet;
 
     private final static int REQUEST_ENABLE_BT = 1;
     private final static int REQUEST_DEVICE_CONNECTION = 2;
@@ -67,6 +69,8 @@ public class SearchActivity extends Activity {
 
         ArrayList<LANDevice> deviceList = new ArrayList<LANDevice>();
 
+        mLANDeviceHashSet = new HashSet<String>();
+
         mLANDeviceAdapter = new AdapterLANDevice(this, deviceList);
 
         mDevices.setAdapter(mLANDeviceAdapter);
@@ -81,14 +85,14 @@ public class SearchActivity extends Activity {
         mConnectionFilter.addAction(BluetoothDevice.ACTION_FOUND);
         mConnectionFilter.addAction("LAN_DEVICEREPLY");
 
-        mReceiver = new DataReceiver(this, mLANDeviceAdapter);
+        mReceiver = new DataReceiver(this, mLANDeviceAdapter, mLANDeviceHashSet);
     }
 
     private void setButtons(){
 
         mHandler = new MessageLink(this);
 
-        mButtonListener = new ButtonListener(this, mHandler);
+        mButtonListener = new ButtonListener(this, mHandler, mLANDeviceAdapter, mLANDeviceHashSet);
 
         mSearchButton = (Button)findViewById(R.id.bluetooth_btn);
         mScanButton = (Button)findViewById(R.id.lan_btn);

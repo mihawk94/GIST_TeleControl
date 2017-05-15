@@ -72,10 +72,17 @@ public class LANReplyingThread extends Thread{
                 return;
             }
 
+            byte [] word = Arrays.copyOfRange(reply, 0, replyPacket.getLength());
+
+            String data = new String(word);
+
             Intent intent = new Intent("LAN_DEVICEREPLY");
 
+            String command = data.substring(0, data.indexOf(" "));
+            String value = data.substring(data.indexOf(" ") + 1);
+
             intent.putExtra("address", new String(replyPacket.getAddress().getHostAddress()));
-            intent.putExtra("name", new String(replyPacket.getData()).split(" ")[1]);
+            intent.putExtra("name", value);
             LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
 
         }
@@ -101,7 +108,6 @@ public class LANReplyingThread extends Thread{
 
             byte [] reply = new byte[100];
             DatagramPacket replyPacket = new DatagramPacket(reply, reply.length);
-            int bytes;
 
             try {
                 Log.d("Logging", "Listening to requests..");
@@ -112,10 +118,6 @@ public class LANReplyingThread extends Thread{
                 Log.d("Logging", e.toString());
                 return;
             }
-
-            replyPacket.getLength();
-
-            //String requestName = new String(replyPacket.getData());
 
             byte [] word = Arrays.copyOfRange(reply, 0, replyPacket.getLength());
 
@@ -140,8 +142,12 @@ public class LANReplyingThread extends Thread{
     }
 
     public void finish(){
-        if(!mSocket.isClosed()) mSocket.close();
+
         mFinish = true;
+
+        if(!mSocket.isClosed()) mSocket.close();
+
+        if(mLANConnectionThread != null) mLANConnectionThread.finish();
     }
 
 }
