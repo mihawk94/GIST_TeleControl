@@ -143,4 +143,8 @@ public class ButtonListener implements View.OnClickListener{
         }
     }
 
+    public DynamicUIThread getDynamicUIThread(){
+        return mDynamicUIThread;
+    }
+
 }

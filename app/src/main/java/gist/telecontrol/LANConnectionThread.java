@@ -1,6 +1,8 @@
 package gist.telecontrol;
 
 import android.content.Context;
+import android.content.Intent;
+import android.support.v4.content.LocalBroadcastManager;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -102,12 +104,16 @@ public class LANConnectionThread extends Thread{
 
     private void runClient(){
 
+        Intent intent = new Intent("ACTIVITY_CONTROL");
+
         try {
             mSocket = new Socket(mAddress, 48184, InetAddress.getLocalHost(), 48183);
         } catch (IOException e) {
             //Give information about the error
             return;
         }
+
+        LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
 
         OutputStream tmpOut;
 

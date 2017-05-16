@@ -84,6 +84,7 @@ public class SearchActivity extends Activity {
         mConnectionFilter = new IntentFilter();
         mConnectionFilter.addAction(BluetoothDevice.ACTION_FOUND);
         mConnectionFilter.addAction("LAN_DEVICEREPLY");
+        mConnectionFilter.addAction("ACTIVITY_CONTROL");
 
         mReceiver = new DataReceiver(this, mLANDeviceAdapter, mLANDeviceHashSet);
     }
@@ -124,7 +125,7 @@ public class SearchActivity extends Activity {
 
     private void setListeners(){
 
-        mConnectionListener = new ConnectionListener();
+        mConnectionListener = new ConnectionListener(this, mLANDeviceAdapter, mHandler);
 
         mDevices.setOnItemClickListener(mConnectionListener);
     }
@@ -135,6 +136,7 @@ public class SearchActivity extends Activity {
 
         mHandler.setBluetoothMessaging(false);
         mHandler.setLANMessaging(false);
+        //Stop connection too.
 
         if(mRegisteredReceiver){
             LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
@@ -173,6 +175,10 @@ public class SearchActivity extends Activity {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
             mRegisteredReceiver = false;
         }
+    }
+
+    public DynamicUIThread getDynamicUIThread(){
+        return mButtonListener.getDynamicUIThread();
     }
 
 

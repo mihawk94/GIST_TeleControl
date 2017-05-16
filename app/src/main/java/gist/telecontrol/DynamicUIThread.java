@@ -42,6 +42,10 @@ public class DynamicUIThread extends Thread{
                 msg.what = mHandler.BLUETOOTH;
                 sendMessage(msg, message);
 
+                msg = Message.obtain();
+                msg.what = mHandler.CONNECTION;
+                sendMessage(msg, message);
+
 
                 try{
                     Thread.sleep(300);
@@ -56,6 +60,10 @@ public class DynamicUIThread extends Thread{
         msg.obj = value;
         msg.setTarget(mHandler);
         msg.sendToTarget();
+    }
+
+    public MessageLink getHandler(){
+        return mHandler;
     }
 
     public void finish(){

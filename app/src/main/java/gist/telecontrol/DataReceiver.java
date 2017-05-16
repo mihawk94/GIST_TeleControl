@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import java.util.HashSet;
@@ -38,6 +39,10 @@ public class DataReceiver extends BroadcastReceiver{
                 break;
             case "LAN_RECEIVEDMSG":
                 lan_receivedMsg(context, intent);
+                break;
+            case "ACTIVITY_CONTROL":
+                activity_control(context, intent);
+                break;
             default:
                 break;
         }
@@ -66,5 +71,29 @@ public class DataReceiver extends BroadcastReceiver{
 
         Toast.makeText(mContext, intent.getStringExtra("name"), Toast.LENGTH_LONG).show();
 
+    }
+
+    private void activity_control(Context context, Intent intent){
+
+        //Detener hilo que controla el mensaje de la UI "Connecting"
+
+        if(((SearchActivity)mContext).getDynamicUIThread() != null){
+
+            ((SearchActivity)mContext).getDynamicUIThread().getHandler().setConnectionMessaging(false);
+            ((SearchActivity)mContext).getDynamicUIThread().finish();
+
+        }
+
+        //Iniciar nueva actividad
+
+        /*
+        Intent i = new Intent(mContext, ControlActivity.class);
+        i.putExtra("name", ((EditText)(((Activity)mContext).findViewById(R.id.tv_name))).getText().toString());
+        ((Activity)mContext).startActivityForResult(i, ((MainActivity) mContext).REQUEST_TV);
+        */
+
+        //Falta: onDestroy() de SearchActivityctivity: verificar si la conexion esta cerrada.
+        //       en activityForResult realizar desconexion al volver hacia atrás. (Necesario crear un RESULT_CONNECTION)
+        //       Definir la nueva actividad
     }
 }
