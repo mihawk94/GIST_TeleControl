@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.HashSet;
@@ -43,6 +44,9 @@ public class DataReceiver extends BroadcastReceiver{
             case "ACTIVITY_CONTROL":
                 activity_control(context, intent);
                 break;
+            case "STOP_CONNECTION":
+                stop_connection(context, intent);
+                break;
             default:
                 break;
         }
@@ -59,11 +63,15 @@ public class DataReceiver extends BroadcastReceiver{
 
     private void enable_tvButton(Context context, Intent intent){
 
+        Log.d("Logging", "Enabling main buttons..");
+
         Button tvButton = (Button)((Activity)mContext).findViewById(R.id.tv_btn);
         Button phoneButton = (Button)((Activity)mContext).findViewById(R.id.phone_btn);
 
         tvButton.setBackgroundResource(R.drawable.custom_button);
         phoneButton.setBackgroundResource(R.drawable.custom_button);
+
+        ((MainActivity)mContext).setConnection(false);
 
     }
 
@@ -77,6 +85,8 @@ public class DataReceiver extends BroadcastReceiver{
 
         //Detener hilo que controla el mensaje de la UI "Connecting"
 
+        Log.d("Logging", "Connecting socket");
+
         if(((SearchActivity)mContext).getDynamicUIThread() != null){
 
             ((SearchActivity)mContext).getDynamicUIThread().getHandler().setConnectionMessaging(false);
@@ -84,16 +94,36 @@ public class DataReceiver extends BroadcastReceiver{
 
         }
 
+        ((TextView)((Activity)mContext).findViewById(R.id.lan_devices_text)).setText("Touch the button to start searching");
+        ((TextView)((Activity)mContext).findViewById(R.id.bt_devices_text)).setText("Showing paired devices");
+
+        ((TextView)((Activity)mContext).findViewById(R.id.lan_btn)).setText("Search");
+        ((TextView)((Activity)mContext).findViewById(R.id.bluetooth_btn)).setText("Touch the button to start searching");
+
+
         //Iniciar nueva actividad
 
-        /*
         Intent i = new Intent(mContext, ControlActivity.class);
-        i.putExtra("name", ((EditText)(((Activity)mContext).findViewById(R.id.tv_name))).getText().toString());
-        ((Activity)mContext).startActivityForResult(i, ((MainActivity) mContext).REQUEST_TV);
-        */
+        //put the name of the Server.
+        i.putExtra("name", intent.getStringExtra("name"));
+        i.putExtra("localName", intent.getStringExtra("localName"));
+        ((Activity)mContext).startActivityForResult(i, ((SearchActivity) mContext).REQUEST_CONNECTION);
+
 
         //Falta: onDestroy() de SearchActivityctivity: verificar si la conexion esta cerrada.
+        //onPressedBackButton(): ver los botones.
+
         //       en activityForResult realizar desconexion al volver hacia atrás. (Necesario crear un RESULT_CONNECTION)
         //       Definir la nueva actividad
+    }
+
+    private void stop_connection(Context context, Intent intent){
+        Button lanButton = (Button)((Activity)mContext).findViewById(R.id.lan_btn);
+        Button btButton = (Button)((Activity)mContext).findViewById(R.id.bluetooth_btn);
+
+        lanButton.setBackgroundResource(R.drawable.scanning_button);
+        btButton.setBackgroundResource(R.drawable.scanning_button);
+
+        ((SearchActivity)mContext).setConnection(false);
     }
 }

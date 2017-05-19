@@ -4,13 +4,21 @@ import android.Manifest;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.PaintDrawable;
+import android.graphics.drawable.ShapeDrawable;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -34,9 +42,11 @@ public class SearchActivity extends Activity {
     private AdapterLANDevice mLANDeviceAdapter;
     private HashSet<String> mLANDeviceHashSet;
 
-    private final static int REQUEST_ENABLE_BT = 1;
-    private final static int REQUEST_DEVICE_CONNECTION = 2;
-    private final static int REQUEST_PERMISSIONS = 3;
+    private boolean mConnected;
+
+    public final static int REQUEST_ENABLE_BT = 1;
+    public final static int REQUEST_CONNECTION = 2;
+    public final static int REQUEST_PERMISSIONS = 3;
 
     public void onCreate(Bundle savedInstanceState){
 
@@ -54,6 +64,8 @@ public class SearchActivity extends Activity {
         setBluetoothPermissions();
 
         setListeners();
+
+        setResult(RESULT_OK);
 
     }
 
@@ -85,6 +97,7 @@ public class SearchActivity extends Activity {
         mConnectionFilter.addAction(BluetoothDevice.ACTION_FOUND);
         mConnectionFilter.addAction("LAN_DEVICEREPLY");
         mConnectionFilter.addAction("ACTIVITY_CONTROL");
+        mConnectionFilter.addAction("STOP_CONNECTION");
 
         mReceiver = new DataReceiver(this, mLANDeviceAdapter, mLANDeviceHashSet);
     }
@@ -130,13 +143,36 @@ public class SearchActivity extends Activity {
         mDevices.setOnItemClickListener(mConnectionListener);
     }
 
+
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+        Log.d("Logging", "Now searching again...");
+        if (resultCode != RESULT_OK) {
+            return;
+        }
+        if(requestCode == REQUEST_CONNECTION){
+            Log.d("Logging", "Stopping connection..");
+            mLANDeviceAdapter.clear();
+            Intent i = new Intent(this, ConnectionService.class);
+            i.setAction("StopConnection");
+            startService(i);
+        }
+    }
+
+    //Cambiar a protected, no funciona bien, ver por qué
+    public void onBackPressed()
+    {
+        if(mConnected) return;
+
+        super.onBackPressed();
+    }
+
     protected void onDestroy(){
 
         super.onDestroy();
 
         mHandler.setBluetoothMessaging(false);
         mHandler.setLANMessaging(false);
-        //Stop connection too.
 
         if(mRegisteredReceiver){
             LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
@@ -181,6 +217,13 @@ public class SearchActivity extends Activity {
         return mButtonListener.getDynamicUIThread();
     }
 
+    public boolean isConnected(){
+        return mConnected;
+    }
+
+    public void setConnection(boolean status){
+        mConnected = status;
+    }
 
 }
 

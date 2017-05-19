@@ -25,36 +25,22 @@ public class ConnectionListener implements AdapterView.OnItemClickListener{
 
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         //Continuar aquí.
-        //Crear nueva actividad, conectarse al servicio e iniciarla. DynamicUIThread con Connecting, y no habilitar botones
-        //hasta detener el intento de conexión.
+        //Ver si esta conectandose
 
-        //Ver si botones están deshabilitados ()
+        if(((SearchActivity)mContext).isConnected()) return;
 
-        int LANcolor = Color.TRANSPARENT;
-        int BTcolor = Color.TRANSPARENT;
-
-        Button LANbtn = (Button)((Activity)mContext).findViewById(R.id.lan_btn);
-        Button BTbtn = (Button)((Activity)mContext).findViewById(R.id.bluetooth_btn);
-
-        Drawable LAN_background = LANbtn.getBackground();
-        Drawable BT_background = BTbtn.getBackground();
-
-        if (LAN_background instanceof ColorDrawable)
-            LANcolor = ((ColorDrawable) LAN_background).getColor();
-
-        if (BT_background instanceof ColorDrawable)
-            BTcolor = ((ColorDrawable) BT_background).getColor();
-
-        if(LANcolor == Color.parseColor("#9ea2a3") || BTcolor == Color.parseColor("#9ea2a3")) return;
+        ((SearchActivity)mContext).setConnection(true);
 
         //Deshabilitar botones
 
-        LANbtn.setBackgroundResource(R.drawable.disabled_scanning_button);
-        BTbtn.setBackgroundResource(R.drawable.disabled_scanning_button);
+        ((SearchActivity)mContext).findViewById(R.id.lan_btn).setBackgroundResource(R.drawable.disabled_scanning_button);
+        ((SearchActivity)mContext).findViewById(R.id.bluetooth_btn).setBackgroundResource(R.drawable.disabled_scanning_button);
 
         //Stop searching and scanning
 
-
+        Intent i_stop = new Intent(mContext, ConnectionService.class);
+        i_stop.setAction("StopRequesting");
+        mContext.startService(i_stop);
 
         //Stop UI current messages
 
@@ -78,6 +64,7 @@ public class ConnectionListener implements AdapterView.OnItemClickListener{
 
         Intent i = new Intent(mContext, ConnectionService.class);
         i.putExtra("localName", ((Activity)mContext).getIntent().getStringExtra("name"));
+        i.putExtra("name", mAdapterLANDevice.getItem(position).getName());
         i.putExtra("address", mAdapterLANDevice.getItem(position).getAddress());
         i.setAction("Connection");
         mContext.startService(i);

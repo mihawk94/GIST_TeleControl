@@ -3,6 +3,7 @@ package gist.telecontrol;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -73,19 +74,29 @@ public class LANExchangerThread extends Thread{
             return;
         }
 
-        byte [] reply = new byte[100];
+        byte [] reply = new byte[1024];
         int bytes = 0;
+        byte [] word;
 
         while(!mFinish){
 
             try{
                 bytes = tmpIn.read(reply);
+                Log.d("Logging", "" + bytes);
             }
             catch(IOException ioe){
                 //Give information about the error
+                Log.d("Logging", "Error");
             }
 
-            byte [] word = Arrays.copyOfRange(reply, 0, bytes);
+            if(bytes != -1){
+                word = Arrays.copyOfRange(reply, 0, bytes);
+            }
+            else{
+                finish();
+                //Give information about the error
+                return;
+            }
 
             //Enviar a la actividad que se ha recibido el mensaje.
 
@@ -113,6 +124,7 @@ public class LANExchangerThread extends Thread{
 
         if(!mSocket.isClosed()){
             try{
+                Log.d("Logging", "Closing socket");
                 mSocket.close();
             }
             catch(IOException ioe){

@@ -3,12 +3,14 @@ package gist.telecontrol;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -24,8 +26,9 @@ public class LANConnectionThread extends Thread{
     private HashMap<String,LANDevice> mLANDeviceHashMap;
     private ServerSocket mServerSocket;
     private Socket mSocket;
-    private String mName;
+    private String mName, mLocalName;
     private ArrayList<LANExchangerThread> mLANExchangerThreads;
+
 
     public LANConnectionThread(Context context){
         mLANDeviceHashMap = new HashMap<String, LANDevice>();
@@ -34,10 +37,11 @@ public class LANConnectionThread extends Thread{
         mCode = 0;
     }
 
-    public LANConnectionThread(Context context, InetAddress address, String name){
+    public LANConnectionThread(Context context, InetAddress address, String localName, String name){
         mContext = context;
         mAddress = address;
         mName = name;
+        mLocalName = localName;
         mCode = 1;
     }
 
@@ -63,16 +67,21 @@ public class LANConnectionThread extends Thread{
         mServerSocket = null;
 
         try{
-            mServerSocket = new ServerSocket(48184);
+            mServerSocket = new ServerSocket();
+            mServerSocket.setReuseAddress(true);
+            mServerSocket.bind(new InetSocketAddress(48184));
         }
         catch(IOException ioe){
             try{
                 mServerSocket.close();
             }
             catch(IOException ioe2){
+                Log.d("Logging", "Error closing the serverSocket");
                 //Give information about the error;
                 return;
             }
+            Log.d("Logging", "Error creating the serverSocket");
+            Log.d("Logging", ioe.toString());
             //Give information about the error;
             return;
         }
@@ -80,10 +89,12 @@ public class LANConnectionThread extends Thread{
         while(!mFinish){
 
             try{
+                Log.d("Logging", "Listening for connections..");
                 mSocket = mServerSocket.accept();
             }
             catch(IOException ioe3){
                 try{
+                    Log.d("Logging", "Listening has ended");
                     mServerSocket.close();
                 }
                 catch(IOException ioe2){
@@ -106,12 +117,22 @@ public class LANConnectionThread extends Thread{
 
         Intent intent = new Intent("ACTIVITY_CONTROL");
 
+        Log.d("Logging", "Connecting socket");
         try {
-            mSocket = new Socket(mAddress, 48184, InetAddress.getLocalHost(), 48183);
+            mSocket = new Socket();
+            mSocket.setReuseAddress(true);
+            mSocket.bind(new InetSocketAddress(LANRequestingThread.getMainAddress(LANRequestingThread.getMainInterface().getInetAddresses()), 48183));
+            mSocket.connect(new InetSocketAddress(mAddress, 48184));
+            //mSocket = new Socket(mAddress, 48184, LANRequestingThread.getMainAddress(LANRequestingThread.getMainInterface().getInetAddresses()), 48183);
         } catch (IOException e) {
+            Log.d("Logging", "Connecting socket error");
             //Give information about the error
+            Log.d("Logging", e.toString());
             return;
         }
+
+        intent.putExtra("name", mName);
+        intent.putExtra("localName", mLocalName);
 
         LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
 
@@ -136,6 +157,8 @@ public class LANConnectionThread extends Thread{
         catch(IOException ioe){
             //Give information about the error
         }
+
+
     }
 
     public void finish(){
@@ -153,9 +176,11 @@ public class LANConnectionThread extends Thread{
             }
         }
 
-        if(mLANExchangerThreads.size() > 0){
-            for(LANExchangerThread thread : mLANExchangerThreads) {
-                thread.finish();
+        if(mLANExchangerThreads != null){
+            if(mLANExchangerThreads.size() > 0){
+                for(LANExchangerThread thread : mLANExchangerThreads) {
+                    thread.finish();
+                }
             }
         }
 

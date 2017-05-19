@@ -6,7 +6,9 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -15,7 +17,7 @@ import android.widget.Toast;
 
 import java.util.HashSet;
 
-public class ButtonListener implements View.OnClickListener{
+public class ButtonListener implements View.OnClickListener, View.OnTouchListener{
 
     private Context mContext;
     private MessageLink mHandler;
@@ -38,13 +40,19 @@ public class ButtonListener implements View.OnClickListener{
     public void onClick(View v) {
 
 
-        int color = Color.TRANSPARENT;
-        Drawable background = v.getBackground();
+        if(mContext instanceof MainActivity){
+            if(((MainActivity)mContext).isConnected()){
+                Log.d("Logging", "Socket connected in MainActivity");
+                return;
+            }
+        }
 
-        if (background instanceof ColorDrawable)
-            color = ((ColorDrawable) background).getColor();
-
-        if(color == Color.parseColor("#818181")) return;
+        if(mContext instanceof SearchActivity){
+            if(((SearchActivity)mContext).isConnected()){
+                Log.d("Logging", "Socket connected in SearchActivity");
+                return;
+            }
+        }
 
         Intent i;
 
@@ -60,6 +68,7 @@ public class ButtonListener implements View.OnClickListener{
                     Toast.makeText(mContext.getApplicationContext(), "Maximum size of name: 16 symbols", Toast.LENGTH_SHORT).show();
                     return;
                 }
+                ((MainActivity)mContext).setConnection(true);
                 i = new Intent(mContext, ServerActivity.class);
                 i.putExtra("name", ((EditText)(((Activity)mContext).findViewById(R.id.tv_name))).getText().toString());
                 ((Activity)mContext).startActivityForResult(i, ((MainActivity) mContext).REQUEST_TV);
@@ -75,6 +84,7 @@ public class ButtonListener implements View.OnClickListener{
                     Toast.makeText(mContext.getApplicationContext(), "Maximum size of name: 16 symbols", Toast.LENGTH_SHORT).show();
                     return;
                 }
+                ((MainActivity)mContext).setConnection(true);
                 i = new Intent(mContext, SearchActivity.class);
                 i.putExtra("name", ((EditText)(((Activity)mContext).findViewById(R.id.phone_name))).getText().toString());
                 ((Activity)mContext).startActivityForResult(i, ((MainActivity) mContext).REQUEST_PHONE);
@@ -137,10 +147,112 @@ public class ButtonListener implements View.OnClickListener{
                 }
                 break;
 
-
             default:
                 break;
         }
+    }
+
+    public boolean onTouch(View v, MotionEvent event){
+
+        Intent i;
+
+        switch(v.getId()){
+
+            case R.id.ch_up:
+                if(event.getAction() == MotionEvent.ACTION_DOWN) {
+                    ((GradientDrawable)v.getBackground()).setColor(Color.parseColor("#FF4A148C"));
+                    i = new Intent(mContext, ConnectionService.class);
+                    i.setAction("SendMessage");
+                    i.putExtra("message", "PRESS: CH_UP");
+                    mContext.startService(i);
+                }
+                else if(event.getAction() == MotionEvent.ACTION_UP) {
+                    ((GradientDrawable)v.getBackground()).setColor(Color.parseColor("#616161"));
+                    i = new Intent(mContext, ConnectionService.class);
+                    i.setAction("SendMessage");
+                    i.putExtra("message", "RELEASE: CH_UP");
+                    mContext.startService(i);
+                }
+                else if(event.getAction() == MotionEvent.ACTION_CANCEL){
+                    ((GradientDrawable)v.getBackground()).setColor(Color.parseColor("#616161"));
+                    i = new Intent(mContext, ConnectionService.class);
+                    i.setAction("SendMessage");
+                    i.putExtra("message", "RELEASE: CH_UP");
+                    mContext.startService(i);
+                }
+                break;
+            case R.id.vol_down:
+                if(event.getAction() == MotionEvent.ACTION_DOWN) {
+                    ((GradientDrawable)v.getBackground()).setColor(Color.parseColor("#FF4A148C"));
+                    i = new Intent(mContext, ConnectionService.class);
+                    i.setAction("SendMessage");
+                    i.putExtra("message", "PRESS: VOL_DOWN");
+                    mContext.startService(i);
+                }
+                else if(event.getAction() == MotionEvent.ACTION_UP) {
+                    ((GradientDrawable)v.getBackground()).setColor(Color.parseColor("#616161"));
+                    i = new Intent(mContext, ConnectionService.class);
+                    i.setAction("SendMessage");
+                    i.putExtra("message", "RELEASE: VOL_DOWN");
+                    mContext.startService(i);
+                }
+                else if(event.getAction() == MotionEvent.ACTION_CANCEL){
+                    ((GradientDrawable)v.getBackground()).setColor(Color.parseColor("#616161"));
+                    i = new Intent(mContext, ConnectionService.class);
+                    i.setAction("SendMessage");
+                    i.putExtra("message", "RELEASE: VOL_DOWN");
+                    mContext.startService(i);
+                }
+                break;
+            case R.id.vol_up:
+                if(event.getAction() == MotionEvent.ACTION_DOWN) {
+                    ((GradientDrawable)v.getBackground()).setColor(Color.parseColor("#FF4A148C"));
+                    i = new Intent(mContext, ConnectionService.class);
+                    i.setAction("SendMessage");
+                    i.putExtra("message", "PRESS: VOL_UP");
+                    mContext.startService(i);
+                }
+                else if(event.getAction() == MotionEvent.ACTION_UP) {
+                    ((GradientDrawable)v.getBackground()).setColor(Color.parseColor("#616161"));
+                    i = new Intent(mContext, ConnectionService.class);
+                    i.setAction("SendMessage");
+                    i.putExtra("message", "RELEASE: VOL_UP");
+                    mContext.startService(i);
+                }
+                else if(event.getAction() == MotionEvent.ACTION_CANCEL){
+                    ((GradientDrawable)v.getBackground()).setColor(Color.parseColor("#616161"));
+                    i = new Intent(mContext, ConnectionService.class);
+                    i.setAction("SendMessage");
+                    i.putExtra("message", "RELEASE: VOL_UP");
+                    mContext.startService(i);
+                }
+                break;
+            case R.id.ch_down:
+                if(event.getAction() == MotionEvent.ACTION_DOWN) {
+                    ((GradientDrawable)v.getBackground()).setColor(Color.parseColor("#FF4A148C"));
+                    i = new Intent(mContext, ConnectionService.class);
+                    i.setAction("SendMessage");
+                    i.putExtra("message", "PRESS: CH_DOWN");
+                    mContext.startService(i);
+                }
+                else if(event.getAction() == MotionEvent.ACTION_UP) {
+                    ((GradientDrawable)v.getBackground()).setColor(Color.parseColor("#616161"));
+                    i = new Intent(mContext, ConnectionService.class);
+                    i.setAction("SendMessage");
+                    i.putExtra("message", "RELEASE: CH_DOWN");
+                    mContext.startService(i);
+                }
+                else if(event.getAction() == MotionEvent.ACTION_CANCEL){
+                    ((GradientDrawable)v.getBackground()).setColor(Color.parseColor("#616161"));
+                    i = new Intent(mContext, ConnectionService.class);
+                    i.setAction("SendMessage");
+                    i.putExtra("message", "RELEASE: CH_DOWN");
+                    mContext.startService(i);
+                }
+                break;
+        }
+
+        return true;
     }
 
     public DynamicUIThread getDynamicUIThread(){

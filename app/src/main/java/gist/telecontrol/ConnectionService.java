@@ -14,6 +14,7 @@ public class ConnectionService extends Service {
     private LANRequestingThread mLANRequestingThread;
     private LANReplyingThread mLANReplyingThread;
     private LANConnectionThread mLANConnectionThread;
+    private LANExchangerThread mLANExchangerThread;
 
     public int onStartCommand(Intent intent, int flags, int startId){
 
@@ -35,21 +36,40 @@ public class ConnectionService extends Service {
                 try{
                     mLANConnectionThread = new LANConnectionThread(this,
                             InetAddress.getByName(intent.getStringExtra("address")),
-                            intent.getStringExtra("name"));
+                            intent.getStringExtra("localName"), intent.getStringExtra("name"));
+                    mLANConnectionThread.start();
                 }
                 catch(UnknownHostException uhe){
                     //Give information about the error
                 }
                 break;
+            case "SendMessage":
+                Log.d("Logging", "Sending message..");
+                mLANExchangerThread = new LANExchangerThread(this, mLANConnectionThread.getSocket(), intent.getStringExtra("message"));
+                mLANExchangerThread.start();
+                break;
             case "StopRequesting":
+                Log.d("Logging", "Stopping requesting..");
+
                 mLANRequestingThread.finish();
+
+                Intent enableButton_req = new Intent("ENABLE_TVBUTTON");
+                LocalBroadcastManager.getInstance(this).sendBroadcast(enableButton_req);
+
                 break;
             case "StopReplying":
                 mLANReplyingThread.finish();
 
 
-                Intent enableButton = new Intent("ENABLE_TVBUTTON");
-                LocalBroadcastManager.getInstance(this).sendBroadcast(enableButton);
+                Intent enableButton_rep = new Intent("ENABLE_TVBUTTON");
+                LocalBroadcastManager.getInstance(this).sendBroadcast(enableButton_rep);
+
+                break;
+            case "StopConnection":
+                mLANConnectionThread.finish();
+
+                Intent finishConnection = new Intent("STOP_CONNECTION");
+                LocalBroadcastManager.getInstance(this).sendBroadcast(finishConnection);
 
                 break;
             default:

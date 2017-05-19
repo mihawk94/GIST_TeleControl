@@ -99,7 +99,7 @@ public class LANRequestingThread extends Thread{
 
     }
 
-    public NetworkInterface getMainInterface(){
+    public static NetworkInterface getMainInterface(){
         try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
             for(NetworkInterface interf : Collections.list(interfaces)){
@@ -113,7 +113,7 @@ public class LANRequestingThread extends Thread{
         return null;
     }
 
-    public InetAddress getMainAddress(Enumeration<InetAddress> addresses){
+    public static InetAddress getMainAddress(Enumeration<InetAddress> addresses){
         for(InetAddress address : Collections.list(addresses)){
             if(address instanceof Inet4Address){
                 return address;
@@ -122,7 +122,7 @@ public class LANRequestingThread extends Thread{
         return null;
     }
 
-    public InetAddress getBroadcastAddress(List<InterfaceAddress> iaddresses, InetAddress ipaddr){
+    public static InetAddress getBroadcastAddress(List<InterfaceAddress> iaddresses, InetAddress ipaddr){
         for(InterfaceAddress iaddress : iaddresses){
             if(iaddress.getAddress().equals(ipaddr)) return iaddress.getBroadcast();
         }
