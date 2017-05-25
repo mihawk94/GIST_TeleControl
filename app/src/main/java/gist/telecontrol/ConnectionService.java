@@ -67,6 +67,7 @@ public class ConnectionService extends Service {
                 break;
             case "StopConnection":
                 mLANConnectionThread.finish();
+                Log.d("Logging", "Disconnected");
 
                 Intent finishConnection = new Intent("STOP_CONNECTION");
                 LocalBroadcastManager.getInstance(this).sendBroadcast(finishConnection);

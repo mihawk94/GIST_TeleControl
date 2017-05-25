@@ -57,11 +57,9 @@ public class LANExchangerThread extends Thread{
         mFinish = false;
 
         InputStream tmpIn;
-        OutputStream tmpOut;
 
         try {
             tmpIn = mSocket.getInputStream();
-            tmpOut = mSocket.getOutputStream();
         } catch (IOException e) {
             try{
                 mSocket.close();
@@ -104,17 +102,31 @@ public class LANExchangerThread extends Thread{
 
             Intent intent = new Intent("LAN_RECEIVEDMSG");
 
-            String command = data.substring(0, data.indexOf(" "));
-            String value = data.substring(data.indexOf(" ") + 1);
-
             //Implementar switch con cada comando.
 
-            intent.putExtra("name", value);
+            intent.putExtra("message", data);
             LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
         }
     }
 
     private void sendMessage(){
+
+        OutputStream tmpOut;
+
+        try{
+            tmpOut = mSocket.getOutputStream();
+            tmpOut.write(mMessage.getBytes());
+        } catch(IOException e){
+            try{
+                mSocket.close();
+            }
+            catch(IOException ioe){
+                //Give information about the error
+                return;
+            }
+            //Give information about the error
+            return;
+        }
 
     }
 

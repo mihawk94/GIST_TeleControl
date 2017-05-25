@@ -39,6 +39,7 @@ public class SearchActivity extends Activity {
     private ButtonListener mButtonListener;
     private ConnectionListener mConnectionListener;
     private ListView mDevices;
+    private DynamicUIThread mDynamicUIThread;
     private AdapterLANDevice mLANDeviceAdapter;
     private HashSet<String> mLANDeviceHashSet;
 
@@ -162,6 +163,8 @@ public class SearchActivity extends Activity {
     //Cambiar a protected, no funciona bien, ver por qué
     public void onBackPressed()
     {
+        Log.d("Logging", "Going to main screen...");
+
         if(mConnected) return;
 
         super.onBackPressed();
@@ -214,7 +217,7 @@ public class SearchActivity extends Activity {
     }
 
     public DynamicUIThread getDynamicUIThread(){
-        return mButtonListener.getDynamicUIThread();
+        return mDynamicUIThread;
     }
 
     public boolean isConnected(){
@@ -225,6 +228,9 @@ public class SearchActivity extends Activity {
         mConnected = status;
     }
 
+    public void setDynamicUIThread(DynamicUIThread dynamicUIThread){
+        mDynamicUIThread = dynamicUIThread;
+    }
 }
 
 /*

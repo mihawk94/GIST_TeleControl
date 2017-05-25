@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -58,6 +59,7 @@ public class ConnectionListener implements AdapterView.OnItemClickListener{
         mHandler.setConnectionMessaging(true);
 
         DynamicUIThread connectingThread = new DynamicUIThread(mHandler);
+        ((SearchActivity)mContext).setDynamicUIThread(connectingThread);
         connectingThread.start();
 
         //Start connection

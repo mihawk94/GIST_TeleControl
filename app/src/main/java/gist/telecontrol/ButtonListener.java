@@ -58,6 +58,7 @@ public class ButtonListener implements View.OnClickListener, View.OnTouchListene
 
         switch(v.getId()){
             case R.id.tv_btn:
+                if(!((MainActivity)mContext).getIfDeviceIsTv()) return;
 
                 if(((EditText)(((Activity)mContext).findViewById(R.id.tv_name))).getText().toString().equals("") ||
                         ((EditText)(((Activity)mContext).findViewById(R.id.tv_name))).getText().toString() == null){
@@ -75,6 +76,8 @@ public class ButtonListener implements View.OnClickListener, View.OnTouchListene
                 break;
 
             case R.id.phone_btn:
+                if(((MainActivity)mContext).getIfDeviceIsTv()) return;
+
                 if(((EditText)(((Activity)mContext).findViewById(R.id.phone_name))).getText().toString().equals("") ||
                         ((EditText)(((Activity)mContext).findViewById(R.id.phone_name))).getText().toString() == null){
                     Toast.makeText(mContext.getApplicationContext(), "Insert your device name!", Toast.LENGTH_SHORT).show();
@@ -99,6 +102,7 @@ public class ButtonListener implements View.OnClickListener, View.OnTouchListene
 
                     mHandler.setLANMessaging(true);
                     mDynamicUIThread = new DynamicUIThread(mHandler);
+                    ((SearchActivity)mContext).setDynamicUIThread(mDynamicUIThread);
                     mDynamicUIThread.start();
 
                     //Call the service to connect
@@ -132,6 +136,7 @@ public class ButtonListener implements View.OnClickListener, View.OnTouchListene
 
                     mHandler.setBluetoothMessaging(true);
                     mDynamicUIThread = new DynamicUIThread(mHandler);
+                    ((SearchActivity)mContext).setDynamicUIThread(mDynamicUIThread);
                     mDynamicUIThread.start();
                     //Call the service to connect
                     //change button text

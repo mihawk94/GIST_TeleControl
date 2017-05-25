@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
@@ -68,8 +70,14 @@ public class DataReceiver extends BroadcastReceiver{
         Button tvButton = (Button)((Activity)mContext).findViewById(R.id.tv_btn);
         Button phoneButton = (Button)((Activity)mContext).findViewById(R.id.phone_btn);
 
-        tvButton.setBackgroundResource(R.drawable.custom_button);
-        phoneButton.setBackgroundResource(R.drawable.custom_button);
+        if(((MainActivity)mContext).getIfDeviceIsTv()) {
+            tvButton.setBackgroundResource(R.drawable.custom_button);
+            phoneButton.setBackgroundResource(R.drawable.disabled_custom_button);
+        }
+        else{
+            tvButton.setBackgroundResource(R.drawable.disabled_custom_button);
+            phoneButton.setBackgroundResource(R.drawable.custom_button);
+        }
 
         ((MainActivity)mContext).setConnection(false);
 
@@ -77,8 +85,63 @@ public class DataReceiver extends BroadcastReceiver{
 
     private void lan_receivedMsg(Context context, Intent intent){
 
-        Toast.makeText(mContext, intent.getStringExtra("name"), Toast.LENGTH_LONG).show();
+        String data = intent.getStringExtra("message");
 
+        String command = data.substring(0, data.indexOf(" "));
+        String value = data.substring(data.indexOf(" ") + 1);
+
+        switch(command){
+            case "PRESS:":
+                press(value);
+                break;
+            case "RELEASE:":
+                release(value);
+                break;
+            case "NAME:":
+                Toast.makeText(mContext, "'" + value + "' is connected", Toast.LENGTH_SHORT).show();
+                break;
+            default:
+                break;
+        }
+
+    }
+
+    private void press(String value){
+        switch (value){
+            case "CH_UP":
+                ((GradientDrawable)((Activity)mContext).findViewById(R.id.ch_up).getBackground()).setColor(Color.parseColor("#FF4A148C"));
+                break;
+            case "VOL_DOWN":
+                ((GradientDrawable)((Activity)mContext).findViewById(R.id.vol_down).getBackground()).setColor(Color.parseColor("#FF4A148C"));
+                break;
+            case "VOL_UP":
+                ((GradientDrawable)((Activity)mContext).findViewById(R.id.vol_up).getBackground()).setColor(Color.parseColor("#FF4A148C"));
+                break;
+            case "CH_DOWN":
+                ((GradientDrawable)((Activity)mContext).findViewById(R.id.ch_down).getBackground()).setColor(Color.parseColor("#FF4A148C"));
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void release(String value){
+        switch (value){
+            case "CH_UP":
+                ((GradientDrawable)((Activity)mContext).findViewById(R.id.ch_up).getBackground()).setColor(Color.parseColor("#616161"));
+                break;
+            case "VOL_DOWN":
+                ((GradientDrawable)((Activity)mContext).findViewById(R.id.vol_down).getBackground()).setColor(Color.parseColor("#616161"));
+                break;
+            case "VOL_UP":
+                ((GradientDrawable)((Activity)mContext).findViewById(R.id.vol_up).getBackground()).setColor(Color.parseColor("#616161"));
+                break;
+            case "CH_DOWN":
+                ((GradientDrawable)((Activity)mContext).findViewById(R.id.ch_down).getBackground()).setColor(Color.parseColor("#616161"));
+                break;
+            default:
+                break;
+        }
     }
 
     private void activity_control(Context context, Intent intent){
@@ -89,6 +152,8 @@ public class DataReceiver extends BroadcastReceiver{
 
         if(((SearchActivity)mContext).getDynamicUIThread() != null){
 
+
+
             ((SearchActivity)mContext).getDynamicUIThread().getHandler().setConnectionMessaging(false);
             ((SearchActivity)mContext).getDynamicUIThread().finish();
 
@@ -97,8 +162,8 @@ public class DataReceiver extends BroadcastReceiver{
         ((TextView)((Activity)mContext).findViewById(R.id.lan_devices_text)).setText("Touch the button to start searching");
         ((TextView)((Activity)mContext).findViewById(R.id.bt_devices_text)).setText("Showing paired devices");
 
-        ((TextView)((Activity)mContext).findViewById(R.id.lan_btn)).setText("Search");
-        ((TextView)((Activity)mContext).findViewById(R.id.bluetooth_btn)).setText("Touch the button to start searching");
+        ((TextView)((Activity)mContext).findViewById(R.id.lan_btn)).setText("SEARCH");
+        ((TextView)((Activity)mContext).findViewById(R.id.bluetooth_btn)).setText("SCAN");
 
 
         //Iniciar nueva actividad
