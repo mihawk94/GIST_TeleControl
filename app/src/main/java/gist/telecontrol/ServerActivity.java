@@ -6,11 +6,14 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class ServerActivity extends Activity{
+public class ServerActivity extends FragmentActivity {
 
     private IntentFilter mConnectionFilter;
     private DataReceiver mReceiver;
@@ -20,6 +23,14 @@ public class ServerActivity extends Activity{
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_server);
+
+        FragmentManager fm = getSupportFragmentManager();
+        Fragment fragment = fm.findFragmentById(R.id.fragment_container);
+        if (fragment == null) {
+            fragment = new ControlFragment();
+            fm.beginTransaction()
+                    .add(R.id.fragment_container, fragment)
+                    .commit(); }
 
         setFonts();
 
