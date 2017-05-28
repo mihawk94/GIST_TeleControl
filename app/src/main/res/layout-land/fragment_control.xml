@@ -1,9 +1,23 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
-              android:orientation="vertical"
-              android:background="#e4e4e4">
+              android:orientation="vertical">
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:background="@drawable/connected_layout"
+                  android:gravity="center">
+        <TextView
+            android:id="@+id/device_name_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="#000000"
+            android:padding="4dp"
+            android:text="Device name: "/>
+    </LinearLayout>
     <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
@@ -63,6 +77,5 @@
                 android:background="@drawable/control_button"
                 />
         </LinearLayout>
-
     </LinearLayout>
 </LinearLayout>

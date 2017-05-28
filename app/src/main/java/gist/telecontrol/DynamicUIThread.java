@@ -39,10 +39,6 @@ public class DynamicUIThread extends Thread{
                 sendMessage(msg, message);
 
                 msg = Message.obtain();
-                msg.what = mHandler.BLUETOOTH;
-                sendMessage(msg, message);
-
-                msg = Message.obtain();
                 msg.what = mHandler.CONNECTION;
                 sendMessage(msg, message);
 

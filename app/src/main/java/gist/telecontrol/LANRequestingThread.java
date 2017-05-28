@@ -2,6 +2,8 @@ package gist.telecontrol;
 
 import android.app.Service;
 import android.content.Context;
+import android.content.Intent;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import java.io.IOException;
@@ -31,9 +33,13 @@ public class LANRequestingThread extends Thread{
 
     public void run(){
 
+        Intent intent = new Intent("NETWORK_ERROR");
+
         if(getMainInterface() == null){
-            Log.d("Logging", "Error getting main interface");
-            //Give information about the error
+            Log.d("Logging", "Error getting main WiFi interface");
+            //Information about the error
+            intent.putExtra("message", "REQUEST: Error getting main WiFi interface");
+            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
             return;
         }
 
@@ -41,7 +47,9 @@ public class LANRequestingThread extends Thread{
 
         if(ipaddr == null){
             Log.d("Logging", "Error getting main address");
-            //Give information about the error
+            //Information about the error
+            intent.putExtra("message", "REQUEST: Error getting main address");
+            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
             return;
         }
 
@@ -49,7 +57,9 @@ public class LANRequestingThread extends Thread{
 
         if(braddr == null){
             Log.d("Logging", "Error getting broadcast address");
-            //Give information about the error
+            //Information about the error
+            intent.putExtra("message", "REQUEST: Error getting broadcast address");
+            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
             return;
         }
 
@@ -67,7 +77,9 @@ public class LANRequestingThread extends Thread{
             mSocket = new DatagramSocket(48181);
         }
         catch(SocketException se){
-            //Give information about the error
+            //Information about the error
+            intent.putExtra("message", "REQUEST: Error creating socket");
+            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
             return;
         }
 
@@ -84,8 +96,10 @@ public class LANRequestingThread extends Thread{
                 mSocket.send(requestPacket);
             }
             catch(IOException ioe){
-                mSocket.close();
-                //Give information about the error
+                if(!mSocket.isClosed()) mSocket.close();
+                //Information about the error
+                intent.putExtra("message", "REQUEST: Error sending requests");
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 return;
             }
 

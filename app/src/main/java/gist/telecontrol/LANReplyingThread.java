@@ -52,6 +52,7 @@ public class LANReplyingThread extends Thread{
 
     private void runClient(){
 
+        Intent intent;
 
         mFinish = false;
 
@@ -66,9 +67,12 @@ public class LANReplyingThread extends Thread{
                 mSocket.receive(replyPacket);
                 Log.d("Logging", "Reply received from one device!");
             } catch (IOException e) {
-                mSocket.close();
-                Log.d("Logging", "Problem with client receiving socket");
-                //Give information about the error.
+                if(!mSocket.isClosed()) mSocket.close();
+                Log.d("Logging", "Error receiving packet/Search stopped");
+                //Information about the error
+                intent = new Intent("NETWORK_ERROR");
+                intent.putExtra("message", "REPLY: Search stopped");
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 return;
             }
 
@@ -76,7 +80,7 @@ public class LANReplyingThread extends Thread{
 
             String data = new String(word);
 
-            Intent intent = new Intent("LAN_DEVICEREPLY");
+            intent = new Intent("LAN_DEVICEREPLY");
 
             String command = data.substring(0, data.indexOf(" "));
             String value = data.substring(data.indexOf(" ") + 1);
@@ -91,14 +95,18 @@ public class LANReplyingThread extends Thread{
 
     private void runServer(){
 
+        Intent intent = new Intent("NETWORK_ERROR");
+
         mLANConnectionThread = new LANConnectionThread(mContext);
         mLANConnectionThread.start();
 
         try {
             mSocket = new DatagramSocket(48182);
         } catch (SocketException e) {
-            Log.d("Logging", "Maybe port is already used");
-            //Give information about the error
+            Log.d("Logging", "Error creating socket");
+            //Information about the error
+            intent.putExtra("message", "REPLY: Error creating socket");
+            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
             return;
         }
 
@@ -113,9 +121,10 @@ public class LANReplyingThread extends Thread{
                 Log.d("Logging", "Listening to requests..");
                 mSocket.receive(replyPacket);
             } catch (IOException e) {
-                mSocket.close();
-                //Give information about the error.
-                Log.d("Logging", e.toString());
+                if(!mSocket.isClosed()) mSocket.close();
+                //Information about the error
+                intent.putExtra("message", "REPLY: Error receiving request packet");
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 return;
             }
 
@@ -131,9 +140,10 @@ public class LANReplyingThread extends Thread{
                 Log.d("Logging", "Sending info to " + replyPacket.getAddress().getHostAddress() + ":" + replyPacket.getPort() + " " + requestName);
                 mSocket.send(replyPacket);
             } catch (IOException e) {
-                mSocket.close();
-                //Give information about the error.
-                Log.d("Logging", e.toString());
+                if(!mSocket.isClosed()) mSocket.close();
+                //Information about the error.
+                intent.putExtra("message", "REPLY: Error sending reply packet");
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 return;
             }
 

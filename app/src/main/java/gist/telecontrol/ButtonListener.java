@@ -117,9 +117,7 @@ public class ButtonListener implements View.OnClickListener, View.OnTouchListene
                 else{
                     Log.d("Logging", "LAN: Search finished");
                     mHandler.setLANMessaging(false);
-                    if(!mHandler.getBluetoothMessaging()){
-                        mDynamicUIThread.finish();
-                    }
+                    ((SearchActivity)mContext).getDynamicUIThread().finish();
                     //Stop search
                     i = new Intent(mContext, ConnectionService.class);
                     i.setAction("StopRequesting");
@@ -127,28 +125,6 @@ public class ButtonListener implements View.OnClickListener, View.OnTouchListene
                     //change button text
                     ((Button)v).setText("SEARCH");
                     ((TextView) ((Activity)mContext).findViewById(R.id.lan_devices_text)).setText("Touch the button to start searching");
-                }
-                break;
-
-            case R.id.bluetooth_btn:
-                if(((Button)v).getText().equals("SCAN")){
-                    Log.d("Logging", "Bluetooth: Scanning..");
-
-                    mHandler.setBluetoothMessaging(true);
-                    mDynamicUIThread = new DynamicUIThread(mHandler);
-                    ((SearchActivity)mContext).setDynamicUIThread(mDynamicUIThread);
-                    mDynamicUIThread.start();
-                    //Call the service to connect
-                    //change button text
-                }
-                else{
-                    Log.d("Logging", "Bluetooth: Scan finished");
-                    mHandler.setBluetoothMessaging(false);
-                    if(!mHandler.getLANMessaging()){
-                        mDynamicUIThread.finish();
-                    }
-                    //Stop search
-                    //change button text
                 }
                 break;
 

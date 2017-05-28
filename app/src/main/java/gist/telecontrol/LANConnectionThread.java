@@ -8,14 +8,18 @@ import android.util.Log;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.ConnectException;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.nio.channels.ConnectionPendingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.concurrent.TimeoutException;
 
 public class LANConnectionThread extends Thread{
 
@@ -23,15 +27,12 @@ public class LANConnectionThread extends Thread{
     private InetAddress mAddress;
     private int mCode;
     private boolean mFinish;
-    private HashMap<String,LANDevice> mLANDeviceHashMap;
     private ServerSocket mServerSocket;
     private Socket mSocket;
     private String mName, mLocalName;
     private ArrayList<LANExchangerThread> mLANExchangerThreads;
 
-
     public LANConnectionThread(Context context){
-        mLANDeviceHashMap = new HashMap<String, LANDevice>();
         mLANExchangerThreads = new ArrayList<LANExchangerThread>();
         mContext = context;
         mCode = 0;
@@ -62,6 +63,8 @@ public class LANConnectionThread extends Thread{
 
     private void runServer(){
 
+        Intent intent = new Intent("NETWORK_ERROR");
+
         mFinish = false;
 
         mServerSocket = null;
@@ -72,17 +75,11 @@ public class LANConnectionThread extends Thread{
             mServerSocket.bind(new InetSocketAddress(48184));
         }
         catch(IOException ioe){
-            try{
-                mServerSocket.close();
-            }
-            catch(IOException ioe2){
-                Log.d("Logging", "Error closing the serverSocket");
-                //Give information about the error;
-                return;
-            }
             Log.d("Logging", "Error creating the serverSocket");
             Log.d("Logging", ioe.toString());
-            //Give information about the error;
+            //Information about the error
+            intent.putExtra("message", "CONNECT: Error creating the serverSocket");
+            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
             return;
         }
 
@@ -95,17 +92,21 @@ public class LANConnectionThread extends Thread{
             catch(IOException ioe3){
                 try{
                     Log.d("Logging", "Listening has ended");
-                    mServerSocket.close();
+                    if(!mServerSocket.isClosed()) mServerSocket.close();
                 }
                 catch(IOException ioe2){
-                    //Give information about the error;
+                    //Information about the error
+                    intent.putExtra("message", "CONNECT: Error closing the serverSocket");
+                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                     return;
                 }
-                //Give information about the error;
+                //Information about the error
+                intent.putExtra("message", "CONNECT: Error accepting new connection");
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 return;
             }
 
-            LANExchangerThread listenerThread = new LANExchangerThread(mContext, mSocket, mLANDeviceHashMap);
+            LANExchangerThread listenerThread = new LANExchangerThread(mContext, mSocket);
             listenerThread.start();
 
             mLANExchangerThreads.add(listenerThread);
@@ -115,26 +116,72 @@ public class LANConnectionThread extends Thread{
 
     private void runClient(){
 
-        Intent intent = new Intent("ACTIVITY_CONTROL");
+        Intent intent;
 
         Log.d("Logging", "Connecting socket");
         try {
             mSocket = new Socket();
             mSocket.setReuseAddress(true);
             mSocket.bind(new InetSocketAddress(LANRequestingThread.getMainAddress(LANRequestingThread.getMainInterface().getInetAddresses()), 48183));
-            mSocket.connect(new InetSocketAddress(mAddress, 48184));
-            //mSocket = new Socket(mAddress, 48184, LANRequestingThread.getMainAddress(LANRequestingThread.getMainInterface().getInetAddresses()), 48183);
-        } catch (IOException e) {
-            Log.d("Logging", "Connecting socket error");
-            //Give information about the error
-            Log.d("Logging", e.toString());
+        }
+        catch (IOException e) {
+            Log.d("Logging", "Creating socket error");
+            //Information about the error
+            intent = new Intent("NETWORK_ERROR");
+            intent.putExtra("message", "CONNECT: Error while creating socket after an error");
+            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
             return;
         }
+
+        try{
+            Log.d("Logging", "Trying to connect..");
+            mSocket.connect(new InetSocketAddress(mAddress, 48184), 3000);
+            Log.d("Logging", "Connected succesfully!");
+
+        } catch(SocketTimeoutException te){
+            Log.d("Logging", "Connection timeout");
+            try{
+                if(!mSocket.isClosed()) mSocket.close();
+            } catch(IOException e1){
+                //Information about the error
+                intent = new Intent("NETWORK_ERROR");
+                intent.putExtra("message", "CONNECT: Error closing socket after timeout");
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+                return;
+            }
+            //Information about the error
+            intent = new Intent("NETWORK_ERROR");
+            intent.putExtra("message", "CONNECT: Timeout");
+            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+            return;
+        } catch(IOException e){
+            try{
+                if(!mSocket.isClosed()) mSocket.close();
+            } catch(IOException e1){
+                //Information about the error
+                intent = new Intent("NETWORK_ERROR");
+                intent.putExtra("message", "CONNECT: Error closing socket after an error");
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+                return;
+            }
+            //Information about the error
+            intent = new Intent("NETWORK_ERROR");
+            intent.putExtra("message", "CONNECT: Error while connecting socket to broker");
+            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+            return;
+        }
+
+        intent = new Intent("ACTIVITY_CONTROL");
 
         intent.putExtra("name", mName);
         intent.putExtra("localName", mLocalName);
 
         LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+
+        LANExchangerThread mLANExchangerThread = new LANExchangerThread(mContext, mSocket, "NAME: " + mLocalName);
+        mLANExchangerThread.start();
+
+        /*
 
         OutputStream tmpOut;
 
@@ -142,22 +189,35 @@ public class LANConnectionThread extends Thread{
             tmpOut = mSocket.getOutputStream();
         } catch (IOException e) {
             try{
-                mSocket.close();
+                if(!mSocket.isClosed()) mSocket.close();
             }
             catch(IOException ioe){
-                //Give information about the error
+
+                //Information about the error
+                intent = new Intent("NETWORK_ERROR");
+                intent.putExtra("message", "CONNECT: Error while closing socket after an error");
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 return;
             }
-            //Give information about the error
+
+            //Information about the error
+            intent = new Intent("NETWORK_ERROR");
+            intent.putExtra("message", "CONNECT: Error while creating socket output");
+            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
             return;
         }
         try{
-            tmpOut.write(new String("NAME: " + mName).getBytes());
+            tmpOut.write(new String("NAME: " + mLocalName).getBytes());
         }
         catch(IOException ioe){
-            //Give information about the error
+            //Information about the error
+            intent = new Intent("NETWORK_ERROR");
+            intent.putExtra("message", "CONNECT: Error while sending 'Hello!' message to broker");
+            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+            return;
         }
 
+        */
 
     }
 

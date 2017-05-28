@@ -8,33 +8,37 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.content.LocalBroadcastManager;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.HashSet;
 
 public class ServerActivity extends FragmentActivity {
 
     private IntentFilter mConnectionFilter;
     private DataReceiver mReceiver;
     private boolean mRegisteredReceiver;
+    private ListView mDevices;
+    private AdapterLANDevice mLANDeviceAdapter;
+    private ConnectionListener mConnectionListener;
+    private ArrayList<LANDevice> mDeviceArrayList;
+    private HashSet<String> mLANDeviceHashSet;
 
     public void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_server);
 
-        FragmentManager fm = getSupportFragmentManager();
-        Fragment fragment = fm.findFragmentById(R.id.fragment_container);
-        if (fragment == null) {
-            fragment = new ControlFragment();
-            fm.beginTransaction()
-                    .add(R.id.fragment_container, fragment)
-                    .commit(); }
-
         setFonts();
 
+        setListing();
+
         setReceiver();
+
+        setListeners();
 
         ((TextView)(findViewById(R.id.main_title))).setText(getIntent().getStringExtra("name") + ": attached devices");
 
@@ -53,13 +57,36 @@ public class ServerActivity extends FragmentActivity {
         tv.setTypeface(face);
     }
 
+    private void setListing(){
+
+        mDevices = (ListView) findViewById(R.id.lanDevicesListView);
+
+        mDeviceArrayList = new ArrayList<LANDevice>();
+
+        mLANDeviceHashSet = new HashSet<String>();
+
+        mLANDeviceAdapter = new AdapterLANDevice(this, mDeviceArrayList);
+
+        mDevices.setAdapter(mLANDeviceAdapter);
+
+    }
+
     private void setReceiver(){
 
         mConnectionFilter = new IntentFilter();
 
         mConnectionFilter.addAction("LAN_RECEIVEDMSG");
+        mConnectionFilter.addAction("NETWORK_ERROR");
 
-        mReceiver = new DataReceiver(this);
+        mReceiver = new DataReceiver(this, mLANDeviceAdapter, mDeviceArrayList, mLANDeviceHashSet);
+    }
+
+    private void setListeners(){
+
+        mConnectionListener = new ConnectionListener(this, mLANDeviceAdapter);
+
+        mDevices.setOnItemClickListener(mConnectionListener);
+
     }
 
     protected void onDestroy(){

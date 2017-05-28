@@ -50,6 +50,8 @@ public class ControlActivity extends Activity{
 
         mConnectionFilter = new IntentFilter();
 
+        mConnectionFilter.addAction("NETWORK_ERROR");
+
         mReceiver = new DataReceiver(this);
     }
 

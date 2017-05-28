@@ -58,6 +58,8 @@ public class ConnectionService extends Service {
 
                 break;
             case "StopReplying":
+
+                Log.d("Logging", "Stopping replying...");
                 mLANReplyingThread.finish();
 
 

@@ -28,26 +28,24 @@ import java.util.HashSet;
 
 public class SearchActivity extends Activity {
 
-    private BluetoothAdapter mBluetoothAdapter;
     private IntentFilter mConnectionFilter;
     private DataReceiver mReceiver;
     private boolean mRegisteredReceiver;
 
     private MessageLink mHandler;
 
-    private Button mScanButton, mSearchButton;
+    private Button mSearchButton;
     private ButtonListener mButtonListener;
     private ConnectionListener mConnectionListener;
     private ListView mDevices;
     private DynamicUIThread mDynamicUIThread;
     private AdapterLANDevice mLANDeviceAdapter;
     private HashSet<String> mLANDeviceHashSet;
+    private ArrayList<LANDevice> mDeviceArrayList;
 
     private boolean mConnected;
 
-    public final static int REQUEST_ENABLE_BT = 1;
-    public final static int REQUEST_CONNECTION = 2;
-    public final static int REQUEST_PERMISSIONS = 3;
+    public final static int REQUEST_CONNECTION = 1;
 
     public void onCreate(Bundle savedInstanceState){
 
@@ -61,8 +59,6 @@ public class SearchActivity extends Activity {
         setReceiver();
 
         setButtons();
-
-        setBluetoothPermissions();
 
         setListeners();
 
@@ -80,11 +76,11 @@ public class SearchActivity extends Activity {
 
         mDevices = (ListView) findViewById(R.id.lanDevicesListView);
 
-        ArrayList<LANDevice> deviceList = new ArrayList<LANDevice>();
+        mDeviceArrayList = new ArrayList<LANDevice>();
 
         mLANDeviceHashSet = new HashSet<String>();
 
-        mLANDeviceAdapter = new AdapterLANDevice(this, deviceList);
+        mLANDeviceAdapter = new AdapterLANDevice(this, mDeviceArrayList);
 
         mDevices.setAdapter(mLANDeviceAdapter);
 
@@ -92,15 +88,13 @@ public class SearchActivity extends Activity {
 
     private void setReceiver(){
 
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
         mConnectionFilter = new IntentFilter();
-        mConnectionFilter.addAction(BluetoothDevice.ACTION_FOUND);
         mConnectionFilter.addAction("LAN_DEVICEREPLY");
         mConnectionFilter.addAction("ACTIVITY_CONTROL");
         mConnectionFilter.addAction("STOP_CONNECTION");
+        mConnectionFilter.addAction("NETWORK_ERROR");
 
-        mReceiver = new DataReceiver(this, mLANDeviceAdapter, mLANDeviceHashSet);
+        mReceiver = new DataReceiver(this, mLANDeviceAdapter, mLANDeviceHashSet, mDeviceArrayList);
     }
 
     private void setButtons(){
@@ -109,33 +103,11 @@ public class SearchActivity extends Activity {
 
         mButtonListener = new ButtonListener(this, mHandler, mLANDeviceAdapter, mLANDeviceHashSet);
 
-        mSearchButton = (Button)findViewById(R.id.bluetooth_btn);
-        mScanButton = (Button)findViewById(R.id.lan_btn);
+        mSearchButton = (Button)findViewById(R.id.lan_btn);
 
         mSearchButton.setOnClickListener(mButtonListener);
-        mScanButton.setOnClickListener(mButtonListener);
     }
 
-    private void setBluetoothPermissions(){
-
-        String[] permissionsToRequest =
-                {
-                        Manifest.permission.BLUETOOTH_ADMIN,
-                        Manifest.permission.BLUETOOTH,
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-                };
-
-        boolean allPermissionsGranted = true;
-
-        for(String permission : permissionsToRequest) {
-            allPermissionsGranted = allPermissionsGranted && (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED);
-        }
-
-        if(!allPermissionsGranted) {
-            ActivityCompat.requestPermissions(this, permissionsToRequest, REQUEST_PERMISSIONS);
-        }
-    }
 
     private void setListeners(){
 
@@ -174,8 +146,8 @@ public class SearchActivity extends Activity {
 
         super.onDestroy();
 
-        mHandler.setBluetoothMessaging(false);
         mHandler.setLANMessaging(false);
+        mDynamicUIThread.finish();
 
         if(mRegisteredReceiver){
             LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
@@ -231,43 +203,8 @@ public class SearchActivity extends Activity {
     public void setDynamicUIThread(DynamicUIThread dynamicUIThread){
         mDynamicUIThread = dynamicUIThread;
     }
+
+    public MessageLink getHandler(){
+        return mHandler;
+    }
 }
-
-/*
-    private Handler handler = new Handler();
-    int count = 0;
-
-    private SensorManager mSensorManager;
-    private Sensor mSensor;
-
-/*
-        TextView lanDevicesSearch = ((TextView)findViewById(R.id.lan_devices_text));
-        LinearLayout lanDevicesView = ((LinearLayout)findViewById(R.id.lan_devices));
-        Thread lanDevicesThread = new Thread(new Networking(handler, lanDevicesSearch, lanDevicesView));
-        lanDevicesThread.start();
-        */
-
- /*
-    public void onAccuracyChanged(Sensor sensor, int accuracy){
-
-    }
-
-    public void setupAccelerometer(){
-        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_NORMAL);
-    }
-
-    public void onSensorChanged(SensorEvent sensor){
-    }
-    /*
-    /*
-    private Runnable broadcasting = new Runnable(){
-        @Override
-        public void run() {
-            count++;
-            ((TextView)findViewById(R.id.info)).setText("" + count);
-            handler.postDelayed(broadcasting, 500);
-        }
-    };
-    */
