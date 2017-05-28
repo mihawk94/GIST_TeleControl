@@ -17,6 +17,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.nio.channels.ConnectionPendingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.TimeoutException;
@@ -181,43 +182,59 @@ public class LANConnectionThread extends Thread{
         LANExchangerThread mLANExchangerThread = new LANExchangerThread(mContext, mSocket, "NAME: " + mLocalName);
         mLANExchangerThread.start();
 
-        /*
-
-        OutputStream tmpOut;
+        InputStream tmpIn;
 
         try {
-            tmpOut = mSocket.getOutputStream();
+            tmpIn = mSocket.getInputStream();
         } catch (IOException e) {
             try{
                 if(!mSocket.isClosed()) mSocket.close();
             }
             catch(IOException ioe){
-
                 //Information about the error
                 intent = new Intent("NETWORK_ERROR");
-                intent.putExtra("message", "CONNECT: Error while closing socket after an error");
+                intent.putExtra("message", "EXCHANGE_CLIENT: Error while closing socket after an error: " + mAddress);
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+                return;
+            }
+            //Information about the error
+            intent = new Intent("NETWORK_ERROR");
+            intent.putExtra("message", "EXCHANGE_CLIENT: Error while creating socket input: " + mAddress);
+            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+            return;
+        }
+
+        byte [] reply = new byte[32];
+        int bytes = 0;
+        byte [] word;
+
+        while(!mFinish){
+
+            try{
+                bytes = tmpIn.read(reply);
+                Log.d("Logging", "" + bytes);
+            }
+            catch(IOException ioe){
+                finish();
+                //Information about the error
+                intent = new Intent("NETWORK_ERROR");
+                intent.putExtra("message", "EXCHANGE_CLIENT: Error while reading input bytes: " + mAddress);
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 return;
             }
 
-            //Information about the error
-            intent = new Intent("NETWORK_ERROR");
-            intent.putExtra("message", "CONNECT: Error while creating socket output");
-            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
-            return;
+            if(bytes != -1){
+                word = Arrays.copyOfRange(reply, 0, bytes);
+            }
+            else{
+                finish();
+                //Information about the error
+                intent = new Intent("NETWORK_ERROR");
+                intent.putExtra("message", "EXCHANGE_CLIENT: The broker has been disconnected");
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+                return;
+            }
         }
-        try{
-            tmpOut.write(new String("NAME: " + mLocalName).getBytes());
-        }
-        catch(IOException ioe){
-            //Information about the error
-            intent = new Intent("NETWORK_ERROR");
-            intent.putExtra("message", "CONNECT: Error while sending 'Hello!' message to broker");
-            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
-            return;
-        }
-
-        */
 
     }
 
@@ -259,6 +276,10 @@ public class LANConnectionThread extends Thread{
 
     public Socket getSocket(){
         return mSocket;
+    }
+
+    public ArrayList<LANExchangerThread> getLANExchangerThreads(){
+        return mLANExchangerThreads;
     }
 
 }

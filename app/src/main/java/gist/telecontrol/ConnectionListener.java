@@ -37,7 +37,7 @@ public class ConnectionListener implements AdapterView.OnItemClickListener{
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
         if(mContext instanceof ServerActivity){
-            Log.d("Logging", "Fragment chosen");
+            view.setSelected(true);;
 
             Fragment fragment = mFragmentManager.findFragmentByTag(mAdapterLANDevice.getItem(position).getAddress());
 

@@ -20,6 +20,8 @@ public class LANExchangerThread extends Thread{
     private Socket mSocket;
     private String mMessage;
     private String mAddress;
+    private String mData;
+    private LANKeepAliveThread mLANKeepAliveThread;
     private boolean mFinish;
     private int mCode;
 
@@ -57,11 +59,13 @@ public class LANExchangerThread extends Thread{
         mFinish = false;
 
         InputStream tmpIn;
+        OutputStream tmpOut;
 
         Intent intent;
 
         try {
             tmpIn = mSocket.getInputStream();
+            tmpOut = mSocket.getOutputStream();
         } catch (IOException e) {
             try{
                 if(!mSocket.isClosed()) mSocket.close();
@@ -69,16 +73,21 @@ public class LANExchangerThread extends Thread{
             catch(IOException ioe){
                 //Information about the error
                 intent = new Intent("NETWORK_ERROR");
-                intent.putExtra("message", "EXCHANGE_SERVER: Error while closing socket after an error: " + mAddress);
+                mData = "EXCHANGE_SERVER: Error while closing socket after an error: " + mAddress;
+                intent.putExtra("message", mData);
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 return;
             }
             //Information about the error
             intent = new Intent("NETWORK_ERROR");
-            intent.putExtra("message", "EXCHANGE_SERVER: Error while creating socket input: " + mAddress);
+            mData = "EXCHANGE_SERVER: Error while creating socket input: " + mAddress;
+            intent.putExtra("message", mData);
             LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
             return;
         }
+
+        mLANKeepAliveThread = new LANKeepAliveThread(tmpOut);
+        mLANKeepAliveThread.start();
 
         byte [] reply = new byte[1024];
         int bytes = 0;
@@ -94,7 +103,8 @@ public class LANExchangerThread extends Thread{
                 finish();
                 //Information about the error
                 intent = new Intent("NETWORK_ERROR");
-                intent.putExtra("message", "EXCHANGE_SERVER: Error while reading input bytes: " + mAddress);
+                mData = "EXCHANGE_SERVER: Error while reading input bytes: " + mAddress;
+                intent.putExtra("message", mData);
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 return;
             }
@@ -106,7 +116,8 @@ public class LANExchangerThread extends Thread{
                 finish();
                 //Information about the error
                 intent = new Intent("NETWORK_ERROR");
-                intent.putExtra("message", "EXCHANGE_SERVER: Disconnection: " + mAddress);
+                mData = "EXCHANGE_SERVER: Disconnection: " + mAddress;
+                intent.putExtra("message", mData);
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 return;
             }
@@ -117,10 +128,14 @@ public class LANExchangerThread extends Thread{
 
             intent = new Intent("LAN_RECEIVEDMSG");
 
-            //Implementar switch con cada comando.
-
             intent.putExtra("message", data);
-            intent.putExtra("address", mSocket.getInetAddress().getHostAddress());
+
+            String command = data.substring(0, data.indexOf(" "));
+
+            //Guardar datos del controlador
+            if(command.equals("NAME:")) mData = data;
+
+            intent.putExtra("address", mAddress);
             LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
         }
     }
@@ -154,6 +169,8 @@ public class LANExchangerThread extends Thread{
 
     public void finish(){
 
+        mLANKeepAliveThread.finish();
+
         mFinish = true;
 
         Intent intent = new Intent("NETWORK_ERROR");
@@ -170,6 +187,14 @@ public class LANExchangerThread extends Thread{
                 return;
             }
         }
+    }
+
+    public String getData(){
+        return mData;
+    }
+
+    public String getAddress(){
+        return mAddress;
     }
 
 }

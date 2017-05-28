@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 
 public class DataReceiver extends BroadcastReceiver{
 
@@ -78,10 +79,9 @@ public class DataReceiver extends BroadcastReceiver{
         if(!mLANDeviceHashSet.contains(intent.getStringExtra("address"))){
             mDeviceArrayList.add(new LANDevice(intent.getStringExtra("name"), intent.getStringExtra("address")));
             mLANDeviceHashSet.add(intent.getStringExtra("address"));
+            mDevices.notifyDataSetChanged();
+            Toast.makeText(mContext, intent.getStringExtra("name") + "\n" + intent.getStringExtra("address"), Toast.LENGTH_SHORT).show();
         }
-        mDevices.notifyDataSetChanged();
-        Toast.makeText(mContext, intent.getStringExtra("name") + "\n" + intent.getStringExtra("address"), Toast.LENGTH_SHORT).show();
-
     }
 
     private void enable_tvButton(Context context, Intent intent){
@@ -125,6 +125,8 @@ public class DataReceiver extends BroadcastReceiver{
                 break;
             case "NAME:":
                 Log.d("Logging", "New connection..");
+                if(mLANDeviceHashSet.contains(address)) return;
+                mLANDeviceHashSet.add(address);
                 mDeviceArrayList.add(new LANDevice(value, address));
                 mDevices.notifyDataSetChanged();
 
@@ -132,13 +134,11 @@ public class DataReceiver extends BroadcastReceiver{
 
                 if (fragment == null) {
                     Log.d("Logging", "New fragment..");
-                    fragment = new ControlFragment();
+                    fragment = ControlFragment.newInstance(value);
                     mFragmentManager.beginTransaction()
                             .add(R.id.fragment_container, fragment, address)
                             .commit();
                 }
-
-                ((TextView)fragment.getView().findViewById(R.id.device_name_title)).setText("Device name: " + value);
 
                 Toast.makeText(mContext, "'" + value + "' is connected", Toast.LENGTH_SHORT).show();
                 break;
@@ -251,7 +251,7 @@ public class DataReceiver extends BroadcastReceiver{
             case "REQUEST:":
                 if(!(mContext instanceof SearchActivity)) return;
                 Toast.makeText(mContext, value, Toast.LENGTH_SHORT).show();
-                ((SearchActivity)mContext).getHandler().setConnectionMessaging(false);
+                ((SearchActivity)mContext).getHandler().setLANMessaging(false);
                 stop_connection(context, intent);
                 ((SearchActivity)mContext).getDynamicUIThread().finish();
                 ((Button)((SearchActivity)mContext).findViewById(R.id.lan_btn)).setText("SEARCH");
@@ -286,18 +286,25 @@ public class DataReceiver extends BroadcastReceiver{
                 }
                 break;
             case "EXCHANGE_SERVER:":
+                Log.d("Logging", "EXCHANGE_SERVER error called!");
                 if(!(mContext instanceof ServerActivity)) return;
+                String address = value.substring(value.indexOf(" ") + 1);
+                if(!mLANDeviceHashSet.contains(address)) return;
 
-                Fragment fragment = mFragmentManager.findFragmentById(R.id.fragment_container);
+                Log.d("Logging", "Proceeding to remove the fragment and the item");
+
+                Fragment fragment = mFragmentManager.findFragmentByTag(address);
                 mFragmentManager.beginTransaction().remove(fragment).commit();
 
-                String address = value.substring(value.indexOf(" ") + 1);
                 mLANDeviceHashSet.remove(address);
-                for (LANDevice device : mDeviceArrayList) {
-                    if(device.getAddress().equals(address)){
-                        mDeviceArrayList.remove(device);
+
+                for(int i = 0; i < mDeviceArrayList.size(); i++){
+                    if(mDeviceArrayList.get(i).getAddress().equals(address)){
+                        mDeviceArrayList.remove(i);
+                        break;
                     }
                 }
+
                 mDevices.notifyDataSetChanged();
                 Toast.makeText(mContext, value, Toast.LENGTH_SHORT).show();
                 break;

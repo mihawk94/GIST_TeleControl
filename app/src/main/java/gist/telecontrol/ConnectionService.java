@@ -20,6 +20,10 @@ public class ConnectionService extends Service {
 
         Log.d("Logging", "Service called");
 
+        if(mLANReplyingThread != null){
+            if(mLANReplyingThread.isAlive()) Log.d("Logging", "Replying is alive");
+        }
+
         switch(intent.getAction()){
             case "Requesting":
                 Log.d("Logging", "Requesting called");
@@ -51,7 +55,7 @@ public class ConnectionService extends Service {
             case "StopRequesting":
                 Log.d("Logging", "Stopping requesting..");
 
-                mLANRequestingThread.finish();
+                if(mLANRequestingThread != null) mLANRequestingThread.finish();
 
                 Intent enableButton_req = new Intent("ENABLE_TVBUTTON");
                 LocalBroadcastManager.getInstance(this).sendBroadcast(enableButton_req);
@@ -61,7 +65,6 @@ public class ConnectionService extends Service {
 
                 Log.d("Logging", "Stopping replying...");
                 mLANReplyingThread.finish();
-
 
                 Intent enableButton_rep = new Intent("ENABLE_TVBUTTON");
                 LocalBroadcastManager.getInstance(this).sendBroadcast(enableButton_rep);
@@ -74,6 +77,25 @@ public class ConnectionService extends Service {
                 Intent finishConnection = new Intent("STOP_CONNECTION");
                 LocalBroadcastManager.getInstance(this).sendBroadcast(finishConnection);
 
+                break;
+            case "UpdateServerUI":
+                Log.d("Logging", "Checking for updates..");
+                if(mLANReplyingThread != null){
+                    if(mLANReplyingThread.getLANConnectionThread() != null){
+                        if(mLANReplyingThread.getLANConnectionThread().getLANExchangerThreads() != null){
+                            for(int i = 0; i < mLANReplyingThread.getLANConnectionThread().getLANExchangerThreads().size(); i++){
+                                Log.d("Logging", "Getting device: " + mLANReplyingThread.getLANConnectionThread().getLANExchangerThreads().get(i).getAddress());
+                                Intent updateUI = new Intent("LAN_RECEIVEDMSG");
+                                Intent errorUI = new Intent("NETWORK_ERROR");
+                                updateUI.putExtra("message", mLANReplyingThread.getLANConnectionThread().getLANExchangerThreads().get(i).getData());
+                                updateUI.putExtra("address", mLANReplyingThread.getLANConnectionThread().getLANExchangerThreads().get(i).getAddress());
+                                errorUI.putExtra("message", mLANReplyingThread.getLANConnectionThread().getLANExchangerThreads().get(i).getData());
+                                LocalBroadcastManager.getInstance(this).sendBroadcast(updateUI);
+                                LocalBroadcastManager.getInstance(this).sendBroadcast(errorUI);
+                            }
+                        }
+                    }
+                }
                 break;
             default:
                 break;

@@ -147,7 +147,7 @@ public class SearchActivity extends Activity {
         super.onDestroy();
 
         mHandler.setLANMessaging(false);
-        mDynamicUIThread.finish();
+        if(mDynamicUIThread != null)mDynamicUIThread.finish();
 
         if(mRegisteredReceiver){
             LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
@@ -170,6 +170,7 @@ public class SearchActivity extends Activity {
             LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, mConnectionFilter);
             mRegisteredReceiver = true;
         }
+        //Update UI
     }
 
     protected void onStart(){
@@ -186,6 +187,18 @@ public class SearchActivity extends Activity {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
             mRegisteredReceiver = false;
         }
+
+        if(mDynamicUIThread != null){
+
+            mDynamicUIThread.getHandler().setConnectionMessaging(false);
+            mDynamicUIThread.getHandler().setLANMessaging(false);
+            mDynamicUIThread.finish();
+
+        }
+
+        ((TextView)findViewById(R.id.lan_devices_text)).setText("Touch the button to start searching");
+
+        ((TextView)findViewById(R.id.lan_btn)).setText("SEARCH");
     }
 
     public DynamicUIThread getDynamicUIThread(){

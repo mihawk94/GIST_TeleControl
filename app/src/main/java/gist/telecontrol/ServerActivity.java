@@ -111,6 +111,10 @@ public class ServerActivity extends FragmentActivity {
             LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, mConnectionFilter);
             mRegisteredReceiver = true;
         }
+
+        Intent i = new Intent(this, ConnectionService.class);
+        i.setAction("UpdateServerUI");
+        startService(i);
     }
 
     protected void onStart(){

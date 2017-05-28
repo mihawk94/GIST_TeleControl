@@ -93,7 +93,7 @@ public class LANReplyingThread extends Thread{
 
     }
 
-    private void runServer(){
+    private void runServer() {
 
         Intent intent = new Intent("NETWORK_ERROR");
 
@@ -112,23 +112,23 @@ public class LANReplyingThread extends Thread{
 
         mFinish = false;
 
-        while(!mFinish){
+        while (!mFinish) {
 
-            byte [] reply = new byte[100];
+            byte[] reply = new byte[100];
             DatagramPacket replyPacket = new DatagramPacket(reply, reply.length);
 
             try {
                 Log.d("Logging", "Listening to requests..");
                 mSocket.receive(replyPacket);
             } catch (IOException e) {
-                if(!mSocket.isClosed()) mSocket.close();
+                if (!mSocket.isClosed()) mSocket.close();
                 //Information about the error
                 intent.putExtra("message", "REPLY: Error receiving request packet");
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 return;
             }
 
-            byte [] word = Arrays.copyOfRange(reply, 0, replyPacket.getLength());
+            byte[] word = Arrays.copyOfRange(reply, 0, replyPacket.getLength());
 
             String requestName = new String(word);
 
@@ -140,7 +140,8 @@ public class LANReplyingThread extends Thread{
                 Log.d("Logging", "Sending info to " + replyPacket.getAddress().getHostAddress() + ":" + replyPacket.getPort() + " " + requestName);
                 mSocket.send(replyPacket);
             } catch (IOException e) {
-                if(!mSocket.isClosed()) mSocket.close();
+                if (!mSocket.isClosed()) mSocket.close();
+                Log.d("Logging", "Error sending reply packet");
                 //Information about the error.
                 intent.putExtra("message", "REPLY: Error sending reply packet");
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
@@ -151,7 +152,13 @@ public class LANReplyingThread extends Thread{
 
     }
 
+    public LANConnectionThread getLANConnectionThread(){
+        return mLANConnectionThread;
+    }
+
     public void finish(){
+
+        Log.d("Logging", "Finishing thread..");
 
         mFinish = true;
 
