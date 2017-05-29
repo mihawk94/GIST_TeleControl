@@ -32,6 +32,7 @@ public class ConnectionService extends Service {
                 break;
             case "Replying":
                 Log.d("Logging", "Replying called");
+
                 mLANReplyingThread = new LANReplyingThread(this, intent.getStringExtra("name"));
                 mLANReplyingThread.start();
                 break;

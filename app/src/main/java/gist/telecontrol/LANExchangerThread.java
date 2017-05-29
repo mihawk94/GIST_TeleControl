@@ -11,6 +11,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.HashMap;
 
@@ -21,7 +23,8 @@ public class LANExchangerThread extends Thread{
     private String mMessage;
     private String mAddress;
     private String mData;
-    private LANKeepAliveThread mLANKeepAliveThread;
+    private OutputStream mOutputStream;
+    //private LANKeepAliveThread mLANKeepAliveThread;
     private boolean mFinish;
     private int mCode;
 
@@ -39,6 +42,15 @@ public class LANExchangerThread extends Thread{
         mCode = 1;
     }
 
+    /*
+    public LANExchangerThread(Context context, Socket socket, OutputStream outputStream){
+        mContext = context;
+        mSocket = socket;
+        mOutputStream = outputStream;
+        mCode = 2;
+    }
+    */
+
     public void run(){
 
         switch(mCode){
@@ -47,6 +59,9 @@ public class LANExchangerThread extends Thread{
                 break;
             case 1:
                 sendMessage();
+                break;
+            case 2:
+                runClient();
                 break;
             default:
                 break;
@@ -59,13 +74,13 @@ public class LANExchangerThread extends Thread{
         mFinish = false;
 
         InputStream tmpIn;
-        OutputStream tmpOut;
+        //OutputStream tmpOut;
 
         Intent intent;
 
         try {
             tmpIn = mSocket.getInputStream();
-            tmpOut = mSocket.getOutputStream();
+            //tmpOut = mSocket.getOutputStream();
         } catch (IOException e) {
             try{
                 if(!mSocket.isClosed()) mSocket.close();
@@ -86,8 +101,33 @@ public class LANExchangerThread extends Thread{
             return;
         }
 
-        mLANKeepAliveThread = new LANKeepAliveThread(tmpOut);
+        /*
+        mLANKeepAliveThread = new LANKeepAliveThread(mContext, tmpOut, mSocket);
         mLANKeepAliveThread.start();
+
+        try{
+            mSocket.setSoTimeout(32000);
+        }
+        catch(SocketException se){
+            try{
+                if(!mSocket.isClosed()) mSocket.close();
+            }
+            catch(IOException ioe){
+                //Information about the error
+                intent = new Intent("NETWORK_ERROR");
+                intent.putExtra("message", "EXCHANGE_SERVER: Error while closing socket after an error setting its timeout: " + mAddress);
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+                return;
+            }
+            //Information about the error
+            intent = new Intent("NETWORK_ERROR");
+            intent.putExtra("message", "EXCHANGE_SERVER: Error while setting socket timeout: " + mAddress);
+            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+            return;
+
+        }
+
+        */
 
         byte [] reply = new byte[1024];
         int bytes = 0;
@@ -98,6 +138,22 @@ public class LANExchangerThread extends Thread{
             try{
                 bytes = tmpIn.read(reply);
                 Log.d("Logging", "" + bytes);
+            } catch(SocketTimeoutException te){
+                Log.d("Logging", "Waiting timeout");
+                try{
+                    if(!mSocket.isClosed()) mSocket.close();
+                } catch(IOException e1){
+                    //Information about the error
+                    intent = new Intent("NETWORK_ERROR");
+                    intent.putExtra("message", "EXCHANGE_SERVER: Error closing socket after timeout");
+                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+                    return;
+                }
+                //Information about the error
+                intent = new Intent("NETWORK_ERROR");
+                intent.putExtra("message", "EXCHANGE_SERVER: Timeout");
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+                return;
             }
             catch(IOException ioe){
                 finish();
@@ -167,24 +223,62 @@ public class LANExchangerThread extends Thread{
 
     }
 
+    private void runClient(){
+
+        /*
+        mFinish = false;
+
+        Intent intent = new Intent("NETWORK_ERROR");
+
+        while(!mFinish){
+            try{
+                Log.d("Logging", "Writing KeepAlive message");
+                mOutputStream.write("CONTROLLER ALIVE".getBytes());
+            } catch(IOException e){
+                try{
+                    if(!mSocket.isClosed()) mSocket.close();
+                }
+                catch(IOException ioe){
+                    //Information about the error
+                    intent.putExtra("message", "EXCHANGE_CLIENT: Error while closing socket after an error trying to send a KeepAlive");
+                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+                    return;
+                }
+                //Information about the error
+                intent.putExtra("message", "EXCHANGE_CLIENT: Error while creating socket output/writing KeepAlive message");
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+                return;
+            }
+            try{
+                Thread.sleep(30000);
+            } catch(InterruptedException iex){
+                continue;
+            }
+
+        }
+        */
+    }
+
     public void finish(){
 
-        mLANKeepAliveThread.finish();
+        //if(mLANKeepAliveThread != null) mLANKeepAliveThread.finish();
 
         mFinish = true;
 
         Intent intent = new Intent("NETWORK_ERROR");
 
-        if(!mSocket.isClosed()){
-            try{
-                Log.d("Logging", "Closing socket");
-                mSocket.close();
-            }
-            catch(IOException ioe){
-                //Information about the error
-                intent.putExtra("message", "EXCHANGE: Error while closing socket at exit");
-                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
-                return;
+        if(mSocket != null){
+            if(!mSocket.isClosed()){
+                try{
+                    Log.d("Logging", "Closing socket");
+                    mSocket.close();
+                }
+                catch(IOException ioe){
+                    //Information about the error
+                    intent.putExtra("message", "EXCHANGE: Error while closing socket at exit");
+                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+                    return;
+                }
             }
         }
     }

@@ -37,7 +37,7 @@ public class ConnectionListener implements AdapterView.OnItemClickListener{
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
         if(mContext instanceof ServerActivity){
-            view.setSelected(true);;
+            Log.d("Logging", "Fragment chosen");
 
             Fragment fragment = mFragmentManager.findFragmentByTag(mAdapterLANDevice.getItem(position).getAddress());
 
@@ -50,7 +50,6 @@ public class ConnectionListener implements AdapterView.OnItemClickListener{
             }
 
             transaction.show(fragment);
-            transaction.addToBackStack(null);
             transaction.commit();
 
         }

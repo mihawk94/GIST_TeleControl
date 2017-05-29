@@ -133,4 +133,8 @@ public class ServerActivity extends FragmentActivity {
         }
     }
 
+    public void onBackPressed(){
+        finish();
+    }
+
 }

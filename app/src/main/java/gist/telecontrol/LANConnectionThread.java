@@ -14,6 +14,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.channels.ConnectionPendingException;
 import java.util.ArrayList;
@@ -71,6 +72,7 @@ public class LANConnectionThread extends Thread{
         mServerSocket = null;
 
         try{
+            Log.d("Logging", "Creating serverSocket..");
             mServerSocket = new ServerSocket();
             mServerSocket.setReuseAddress(true);
             mServerSocket.bind(new InetSocketAddress(48184));
@@ -165,6 +167,7 @@ public class LANConnectionThread extends Thread{
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 return;
             }
+            Log.d("Logging", e.toString());
             //Information about the error
             intent = new Intent("NETWORK_ERROR");
             intent.putExtra("message", "CONNECT: Error while connecting socket to broker");
@@ -183,9 +186,11 @@ public class LANConnectionThread extends Thread{
         mLANExchangerThread.start();
 
         InputStream tmpIn;
+        //OutputStream tmpOut;
 
         try {
             tmpIn = mSocket.getInputStream();
+            //tmpOut = mSocket.getOutputStream();
         } catch (IOException e) {
             try{
                 if(!mSocket.isClosed()) mSocket.close();
@@ -208,11 +213,60 @@ public class LANConnectionThread extends Thread{
         int bytes = 0;
         byte [] word;
 
+        /*
+        try{
+            mSocket.setSoTimeout(5000);
+        }
+        catch(SocketException se){
+            try{
+                if(!mSocket.isClosed()) mSocket.close();
+            }
+            catch(IOException ioe){
+                //Information about the error
+                intent = new Intent("NETWORK_ERROR");
+                intent.putExtra("message", "EXCHANGE_CLIENT: Error while closing socket after an error setting its timeout: " + mAddress);
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+                return;
+            }
+            //Information about the error
+            intent = new Intent("NETWORK_ERROR");
+            intent.putExtra("message", "EXCHANGE_CLIENT: Error while setting socket timeout: " + mAddress);
+            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+            return;
+
+        }
+        */
+
+        /*
+        mLANExchangerThread = new LANExchangerThread(mContext, mSocket, tmpOut);
+        mLANExchangerThread.start();
+        */
+
+
+        mFinish = false;
+
         while(!mFinish){
 
             try{
                 bytes = tmpIn.read(reply);
                 Log.d("Logging", "" + bytes);
+            }
+            catch(SocketTimeoutException te){
+                Log.d("Logging", "Waiting timeout");
+                try{
+                    if(!mSocket.isClosed()) mSocket.close();
+                } catch(IOException e1){
+                    //Information about the error
+                    intent = new Intent("NETWORK_ERROR");
+                    intent.putExtra("message", "EXCHANGE_CLIENT: Error closing socket after timeout");
+                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+                    return;
+                }
+                //Information about the error
+                intent = new Intent("NETWORK_ERROR");
+                intent.putExtra("message", "EXCHANGE_CLIENT: Timeout");
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+                return;
             }
             catch(IOException ioe){
                 finish();
@@ -225,6 +279,9 @@ public class LANConnectionThread extends Thread{
 
             if(bytes != -1){
                 word = Arrays.copyOfRange(reply, 0, bytes);
+
+                Log.d("Logging", new String(word));
+                continue;
             }
             else{
                 finish();
@@ -245,6 +302,7 @@ public class LANConnectionThread extends Thread{
         if(mServerSocket != null){
             if(!mServerSocket.isClosed()){
                 try {
+                    Log.d("Logging", "Closing serverSocket..");
                     mServerSocket.close();
                 } catch (IOException e) {
                     //Give information about the error

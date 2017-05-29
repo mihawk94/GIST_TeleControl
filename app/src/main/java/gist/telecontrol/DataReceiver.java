@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -130,15 +131,14 @@ public class DataReceiver extends BroadcastReceiver{
                 mDeviceArrayList.add(new LANDevice(value, address));
                 mDevices.notifyDataSetChanged();
 
-                Fragment fragment = mFragmentManager.findFragmentByTag(address);
 
-                if (fragment == null) {
-                    Log.d("Logging", "New fragment..");
-                    fragment = ControlFragment.newInstance(value);
-                    mFragmentManager.beginTransaction()
-                            .add(R.id.fragment_container, fragment, address)
-                            .commit();
-                }
+                Log.d("Logging", "New fragment..");
+
+                ControlFragment fragment = ControlFragment.newInstance(value);
+                mFragmentManager.beginTransaction()
+                        .add(R.id.fragment_container, fragment, address)
+                        .addToBackStack(null)
+                        .commit();
 
                 Toast.makeText(mContext, "'" + value + "' is connected", Toast.LENGTH_SHORT).show();
                 break;
@@ -149,6 +149,7 @@ public class DataReceiver extends BroadcastReceiver{
     }
 
     private void press(String value, String address){
+        if(mFragmentManager.findFragmentByTag(address) == null) return;
         switch (value){
             case "CH_UP":
                 ((GradientDrawable)mFragmentManager.findFragmentByTag(address).getView().findViewById(R.id.ch_up)
@@ -172,6 +173,7 @@ public class DataReceiver extends BroadcastReceiver{
     }
 
     private void release(String value, String address){
+        if(mFragmentManager.findFragmentByTag(address) == null) return;
         switch (value){
             case "CH_UP":
                 ((GradientDrawable)mFragmentManager.findFragmentByTag(address).getView().findViewById(R.id.ch_up)
@@ -289,12 +291,20 @@ public class DataReceiver extends BroadcastReceiver{
                 Log.d("Logging", "EXCHANGE_SERVER error called!");
                 if(!(mContext instanceof ServerActivity)) return;
                 String address = value.substring(value.indexOf(" ") + 1);
-                if(!mLANDeviceHashSet.contains(address)) return;
+                if(!mLANDeviceHashSet.contains(address)){
+                    Log.d("Logging", "Device isn't connected");
+                    return;
+                }
 
                 Log.d("Logging", "Proceeding to remove the fragment and the item");
 
                 Fragment fragment = mFragmentManager.findFragmentByTag(address);
-                mFragmentManager.beginTransaction().remove(fragment).commit();
+                if(fragment != null){
+                    FragmentTransaction fragmentTransaction = mFragmentManager.beginTransaction();
+                    fragmentTransaction.remove(fragment);
+                    fragmentTransaction.addToBackStack(null);
+                    fragmentTransaction.commit();
+                }
 
                 mLANDeviceHashSet.remove(address);
 
@@ -304,6 +314,18 @@ public class DataReceiver extends BroadcastReceiver{
                         break;
                     }
                 }
+
+                Fragment fragment1 = mFragmentManager.findFragmentById(R.id.fragment_container);
+
+                FragmentTransaction transaction = mFragmentManager.beginTransaction();
+
+                for (Fragment currentFragment : mFragmentManager.getFragments()) {
+                    transaction.hide(currentFragment);
+                }
+
+                transaction.show(fragment1);
+                transaction.addToBackStack(null);
+                transaction.commit();
 
                 mDevices.notifyDataSetChanged();
                 Toast.makeText(mContext, value, Toast.LENGTH_SHORT).show();

@@ -20,6 +20,7 @@ public class LANReplyingThread extends Thread{
     private String mName;
     private int mCode;
     private LANConnectionThread mLANConnectionThread;
+    private LANCheckStatusThread mLANCheckStatusThread;
 
 
     public LANReplyingThread(Context context, DatagramSocket socket){
@@ -97,6 +98,9 @@ public class LANReplyingThread extends Thread{
 
         Intent intent = new Intent("NETWORK_ERROR");
 
+        mLANCheckStatusThread = new LANCheckStatusThread(mContext);
+        mLANCheckStatusThread.start();
+
         mLANConnectionThread = new LANConnectionThread(mContext);
         mLANConnectionThread.start();
 
@@ -162,8 +166,10 @@ public class LANReplyingThread extends Thread{
 
         mFinish = true;
 
-        if(!mSocket.isClosed()) mSocket.close();
-
+        if(mSocket != null){
+            if(!mSocket.isClosed()) mSocket.close();
+        }
+        if(mLANCheckStatusThread != null) mLANCheckStatusThread.finish();
         if(mLANConnectionThread != null) mLANConnectionThread.finish();
     }
 
