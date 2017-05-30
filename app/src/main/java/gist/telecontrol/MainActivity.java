@@ -69,13 +69,13 @@ public class MainActivity extends Activity {
 
     }
 
-    public void setFonts(){
+    private void setFonts(){
         TextView tv=(TextView)findViewById(R.id.main_title);
         Typeface face=Typeface.createFromAsset(getAssets(), "fonts/orange_juice_2.ttf");
         tv.setTypeface(face);
     }
 
-    public void setReceiver(){
+    private void setReceiver(){
 
         mConnectionFilter = new IntentFilter();
 
@@ -84,7 +84,7 @@ public class MainActivity extends Activity {
         mReceiver = new DataReceiver(this);
     }
 
-    public void setButtons(){
+    private void setButtons(){
 
         mButtonListener = new ButtonListener(this);
 

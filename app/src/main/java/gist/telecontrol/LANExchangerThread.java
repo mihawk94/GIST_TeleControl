@@ -13,8 +13,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class LANExchangerThread extends Thread{
 
@@ -23,15 +25,30 @@ public class LANExchangerThread extends Thread{
     private String mMessage;
     private String mAddress;
     private String mData;
+    private String mName;
     private OutputStream mOutputStream;
     //private LANKeepAliveThread mLANKeepAliveThread;
     private boolean mFinish;
     private int mCode;
+    private int mPort;
+    private HashSet<String> mNames;
 
-    public LANExchangerThread(Context context, Socket socket){
+    //Realizar cambios en EXCHANGE_SERVER para diferenciar Cliente de Control
+
+    public LANExchangerThread(Context context, Socket socket, int port, HashSet<String> names){
         mContext = context;
         mSocket = socket;
         mAddress = mSocket.getInetAddress().getHostAddress();
+        mPort = port;
+        mNames = names;
+        mCode = 0;
+    }
+
+    public LANExchangerThread(Context context, Socket socket, int port){
+        mContext = context;
+        mSocket = socket;
+        mAddress = mSocket.getInetAddress().getHostAddress();
+        mPort = port;
         mCode = 0;
     }
 
@@ -88,14 +105,24 @@ public class LANExchangerThread extends Thread{
             catch(IOException ioe){
                 //Information about the error
                 intent = new Intent("NETWORK_ERROR");
-                mData = "EXCHANGE_SERVER: Error while closing socket after an error: " + mAddress;
+                if(mPort == 48184){
+                    mData = mPort + ":EXCHANGE_SERVER: Error while closing socket after an error: /" + mAddress;
+                }
+                else{
+                    mData = mPort + ":EXCHANGE_SERVER: Error while closing socket after an error: /" + mName;
+                }
                 intent.putExtra("message", mData);
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 return;
             }
             //Information about the error
             intent = new Intent("NETWORK_ERROR");
-            mData = "EXCHANGE_SERVER: Error while creating socket input: " + mAddress;
+            if(mPort == 48184){
+                mData = mPort + ":EXCHANGE_SERVER: Error while creating socket input: /" + mAddress;
+            }
+            else{
+                mData = mPort + ":EXCHANGE_SERVER: Error while creating socket input: /" + mName;
+            }
             intent.putExtra("message", mData);
             LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
             return;
@@ -138,7 +165,7 @@ public class LANExchangerThread extends Thread{
             try{
                 bytes = tmpIn.read(reply);
                 Log.d("Logging", "" + bytes);
-            } catch(SocketTimeoutException te){
+            } /*catch(SocketTimeoutException te){
                 Log.d("Logging", "Waiting timeout");
                 try{
                     if(!mSocket.isClosed()) mSocket.close();
@@ -154,12 +181,17 @@ public class LANExchangerThread extends Thread{
                 intent.putExtra("message", "EXCHANGE_SERVER: Timeout");
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 return;
-            }
+            }*/
             catch(IOException ioe){
                 finish();
                 //Information about the error
                 intent = new Intent("NETWORK_ERROR");
-                mData = "EXCHANGE_SERVER: Error while reading input bytes: " + mAddress;
+                if(mPort == 48184){
+                    mData = mPort + ":EXCHANGE_SERVER: Error while reading input bytes /" + mAddress;
+                }
+                else{
+                    mData = mPort + ":EXCHANGE_SERVER: Error while reading input bytes: /" + mName;
+                }
                 intent.putExtra("message", mData);
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 return;
@@ -172,7 +204,12 @@ public class LANExchangerThread extends Thread{
                 finish();
                 //Information about the error
                 intent = new Intent("NETWORK_ERROR");
-                mData = "EXCHANGE_SERVER: Disconnection: " + mAddress;
+                if(mPort == 48184){
+                    mData = mPort + ":EXCHANGE_SERVER: Disconnection: /" + mAddress;
+                }
+                else{
+                    mData = mPort + ":EXCHANGE_SERVER: Disconnection: /" + mName;
+                }
                 intent.putExtra("message", mData);
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 return;
@@ -182,14 +219,33 @@ public class LANExchangerThread extends Thread{
 
             String data = new String(word);
 
+            String command = data.substring(0, data.indexOf(" "));
+            String value = data.substring(data.indexOf(" ") + 1);
+
+            if(mPort == 48186){
+                if(mNames.contains(value)){
+                    Log.d("Logging", "Client: Name already exists");
+                    finish();
+                    //Information about the error
+                    intent = new Intent("NETWORK_ERROR");
+                    mData = mPort + ":EXCHANGE_SERVER: Name exists: /" + mName;
+                    intent.putExtra("message", mData);
+                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+                    return;
+                }
+                else{
+                    Log.d("Logging", "Client: Adding name..");
+                    mNames.add(value);
+                    mName = value;
+                }
+            }
+
             intent = new Intent("LAN_RECEIVEDMSG");
 
-            intent.putExtra("message", data);
-
-            String command = data.substring(0, data.indexOf(" "));
+            intent.putExtra("message", mPort + ":" + data);
 
             //Guardar datos del controlador
-            if(command.equals("NAME:")) mData = data;
+            if(command.equals("NAME:")) mData = mPort + ":" + data;
 
             intent.putExtra("address", mAddress);
             LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
@@ -275,7 +331,13 @@ public class LANExchangerThread extends Thread{
                 }
                 catch(IOException ioe){
                     //Information about the error
-                    intent.putExtra("message", "EXCHANGE: Error while closing socket at exit");
+                    if(mCode == 0){
+                        mData = mPort + ":EXCHANGE_SERVER: Error while closing socket at exit";
+                    }
+                    else{
+                        mData = "EXCHANGE_CLIENT: Error while closing socket at exit";
+                    }
+                    intent.putExtra("message", mData);
                     LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                     return;
                 }
@@ -285,6 +347,10 @@ public class LANExchangerThread extends Thread{
 
     public String getData(){
         return mData;
+    }
+
+    public String getClientName() {
+        return mName;
     }
 
     public String getAddress(){

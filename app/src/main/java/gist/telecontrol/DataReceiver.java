@@ -23,13 +23,24 @@ import java.util.Iterator;
 public class DataReceiver extends BroadcastReceiver{
 
     private Context mContext;
-    private AdapterLANDevice mDevices;
-    private ArrayList<LANDevice> mDeviceArrayList;
-    private HashSet<String> mLANDeviceHashSet;
+    private AdapterLANDevice mDevices, mClients;
+    private ArrayList<LANDevice> mDeviceArrayList, mClientArrayList;
+    private HashSet<String> mLANDeviceHashSet, mLANClientHashSet;
     private FragmentManager mFragmentManager;
 
     public DataReceiver(Context context){
         mContext = context;
+    }
+
+    public DataReceiver(Context context, AdapterLANDevice devices, ArrayList<LANDevice> deviceArrayList, HashSet<String> lanDeviceHashSet, AdapterLANDevice clients, ArrayList<LANDevice> clientArrayList, HashSet<String> lanClientHashSet){
+        mContext = context;
+        mDevices = devices;
+        mDeviceArrayList = deviceArrayList;
+        mLANDeviceHashSet = lanDeviceHashSet;
+        mClients = clients;
+        mClientArrayList = clientArrayList;
+        mLANClientHashSet = lanClientHashSet;
+        mFragmentManager = ((ServerActivity)mContext).getSupportFragmentManager();
     }
 
     public DataReceiver(Context context, AdapterLANDevice devices, ArrayList<LANDevice> deviceArrayList, HashSet<String> lanDeviceHashSet){
@@ -37,18 +48,10 @@ public class DataReceiver extends BroadcastReceiver{
         mDevices = devices;
         mDeviceArrayList = deviceArrayList;
         mLANDeviceHashSet = lanDeviceHashSet;
-        mFragmentManager = ((ServerActivity)mContext).getSupportFragmentManager();
-    }
-
-    public DataReceiver(Context context, AdapterLANDevice devices, HashSet<String> lanDeviceHashSet, ArrayList<LANDevice> deviceArrayList){
-        mContext = context;
-        mDevices = devices;
-        mDeviceArrayList = deviceArrayList;
-        mLANDeviceHashSet = lanDeviceHashSet;
     }
 
     public void onReceive(Context context, Intent intent) {
-        Log.d("Logging", "Receiver has received a new message");
+        Log.d("Logging", "Receiver has received a new message: " + intent.getAction());
 
         switch(intent.getAction()){
             case "LAN_DEVICEREPLY":
@@ -111,6 +114,8 @@ public class DataReceiver extends BroadcastReceiver{
 
         if(!(mContext instanceof ServerActivity)) return;
 
+        Log.d("Logging", "Received new message: " + intent.getStringExtra("message"));
+
         String data = intent.getStringExtra("message");
         String address = intent.getStringExtra("address");
 
@@ -124,14 +129,32 @@ public class DataReceiver extends BroadcastReceiver{
             case "RELEASE:":
                 release(value, address);
                 break;
-            case "NAME:":
+            case "48184:NAME:":
                 Log.d("Logging", "New connection..");
                 if(mLANDeviceHashSet.contains(address)) return;
                 mLANDeviceHashSet.add(address);
                 mDeviceArrayList.add(new LANDevice(value, address));
                 mDevices.notifyDataSetChanged();
 
+                /*
+                Log.d("Logging", "New fragment..");
 
+                ControlFragment fragment = ControlFragment.newInstance(value);
+                mFragmentManager.beginTransaction()
+                        .add(R.id.fragment_container, fragment, address)
+                        .addToBackStack(null)
+                        .commit();
+                */
+                Toast.makeText(mContext, "'" + value + "' is connected", Toast.LENGTH_SHORT).show();
+                break;
+            case "48186:NAME:":
+                Log.d("Logging", "New connection: " + value);
+                if(mLANClientHashSet.contains(value)) return;
+                mLANClientHashSet.add(value);
+                mClientArrayList.add(new LANDevice(value, address));
+                mClients.notifyDataSetChanged();
+
+                /*
                 Log.d("Logging", "New fragment..");
 
                 ControlFragment fragment = ControlFragment.newInstance(value);
@@ -142,6 +165,7 @@ public class DataReceiver extends BroadcastReceiver{
 
                 Toast.makeText(mContext, "'" + value + "' is connected", Toast.LENGTH_SHORT).show();
                 break;
+                */
             default:
                 break;
         }
@@ -249,6 +273,8 @@ public class DataReceiver extends BroadcastReceiver{
         String command = data.substring(0, data.indexOf(" "));
         String value = data.substring(data.indexOf(" ") + 1);
 
+        Intent removingThread;
+
         switch(command){
             case "REQUEST:":
                 if(!(mContext instanceof SearchActivity)) return;
@@ -287,24 +313,27 @@ public class DataReceiver extends BroadcastReceiver{
                 ((ServerActivity)mContext).finish();
                 }
                 break;
-            case "EXCHANGE_SERVER:":
-                Log.d("Logging", "EXCHANGE_SERVER error called!");
+            case "48184:EXCHANGE_SERVER:":
+                Log.d("Logging", "48184:EXCHANGE_SERVER error called!");
                 if(!(mContext instanceof ServerActivity)) return;
-                String address = value.substring(value.indexOf(" ") + 1);
+                String address = value.substring(value.indexOf("/") + 1);
                 if(!mLANDeviceHashSet.contains(address)){
                     Log.d("Logging", "Device isn't connected");
                     return;
                 }
 
+                /*
                 Log.d("Logging", "Proceeding to remove the fragment and the item");
 
                 Fragment fragment = mFragmentManager.findFragmentByTag(address);
                 if(fragment != null){
+                    Log.d("Logging", "Removing fragment");
                     FragmentTransaction fragmentTransaction = mFragmentManager.beginTransaction();
                     fragmentTransaction.remove(fragment);
                     fragmentTransaction.addToBackStack(null);
                     fragmentTransaction.commit();
                 }
+                */
 
                 mLANDeviceHashSet.remove(address);
 
@@ -315,7 +344,8 @@ public class DataReceiver extends BroadcastReceiver{
                     }
                 }
 
-                Fragment fragment1 = mFragmentManager.findFragmentById(R.id.fragment_container);
+                /*
+                Fragment fragment1;
 
                 FragmentTransaction transaction = mFragmentManager.beginTransaction();
 
@@ -323,12 +353,50 @@ public class DataReceiver extends BroadcastReceiver{
                     transaction.hide(currentFragment);
                 }
 
-                transaction.show(fragment1);
+                if(!mDeviceArrayList.isEmpty()){
+                    fragment1 = mFragmentManager.findFragmentByTag(mDeviceArrayList.get(mDeviceArrayList.size()-1).getAddress());
+                    transaction.show(fragment1);
+                }
                 transaction.addToBackStack(null);
                 transaction.commit();
 
+
+                */
                 mDevices.notifyDataSetChanged();
                 Toast.makeText(mContext, value, Toast.LENGTH_SHORT).show();
+
+                removingThread = new Intent(mContext, ConnectionService.class);
+                removingThread.setAction("RemoveThreadServer");
+                removingThread.putExtra("address", address);
+                mContext.startService(removingThread);
+                break;
+            case "48186:EXCHANGE_SERVER:":
+                Log.d("Logging", "48186:EXCHANGE_SERVER error called!");
+                if(!(mContext instanceof ServerActivity)) return;
+                String name = value.substring(value.indexOf("/") + 1);
+                if(!mLANClientHashSet.contains(name)){
+                    Log.d("Logging", "Client " + name + " isn't connected");
+                    return;
+                }
+
+                mLANClientHashSet.remove(name);
+
+                for(int i = 0; i < mClientArrayList.size(); i++){
+                    if(mClientArrayList.get(i).getName().equals(name)){
+                        mClientArrayList.remove(i);
+                        break;
+                    }
+                }
+
+                mClients.notifyDataSetChanged();
+                Toast.makeText(mContext, name, Toast.LENGTH_SHORT).show();
+
+                removingThread = new Intent(mContext, ConnectionService.class);
+                removingThread.setAction("RemoveThreadApp");
+                removingThread.putExtra("name", name);
+                mContext.startService(removingThread);
+
+
                 break;
             case "EXCHANGE_CLIENT:":
                 if(!(mContext instanceof ControlActivity)) return;

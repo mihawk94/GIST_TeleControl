@@ -21,11 +21,11 @@ public class ServerActivity extends FragmentActivity {
     private IntentFilter mConnectionFilter;
     private DataReceiver mReceiver;
     private boolean mRegisteredReceiver;
-    private ListView mDevices;
-    private AdapterLANDevice mLANDeviceAdapter;
+    private ListView mDevices, mClients;
+    private AdapterLANDevice mLANDeviceAdapter, mLANClientAdapter;
     private ConnectionListener mConnectionListener;
-    private ArrayList<LANDevice> mDeviceArrayList;
-    private HashSet<String> mLANDeviceHashSet;
+    private ArrayList<LANDevice> mDeviceArrayList, mClientArrayList;
+    private HashSet<String> mLANDeviceHashSet, mLANClientHashSet;
 
     public void onCreate(Bundle savedInstanceState) {
 
@@ -61,13 +61,23 @@ public class ServerActivity extends FragmentActivity {
 
         mDevices = (ListView) findViewById(R.id.lanDevicesListView);
 
+        mClients = (ListView) findViewById(R.id.lanClientsListView);
+
         mDeviceArrayList = new ArrayList<LANDevice>();
+
+        mClientArrayList = new ArrayList<LANDevice>();
 
         mLANDeviceHashSet = new HashSet<String>();
 
+        mLANClientHashSet = new HashSet<String>();
+
         mLANDeviceAdapter = new AdapterLANDevice(this, mDeviceArrayList);
 
+        mLANClientAdapter = new AdapterLANDevice(this, mClientArrayList);
+
         mDevices.setAdapter(mLANDeviceAdapter);
+
+        mClients.setAdapter(mLANClientAdapter);
 
     }
 
@@ -78,7 +88,7 @@ public class ServerActivity extends FragmentActivity {
         mConnectionFilter.addAction("LAN_RECEIVEDMSG");
         mConnectionFilter.addAction("NETWORK_ERROR");
 
-        mReceiver = new DataReceiver(this, mLANDeviceAdapter, mDeviceArrayList, mLANDeviceHashSet);
+        mReceiver = new DataReceiver(this, mLANDeviceAdapter, mDeviceArrayList, mLANDeviceHashSet, mLANClientAdapter, mClientArrayList, mLANClientHashSet);
     }
 
     private void setListeners(){

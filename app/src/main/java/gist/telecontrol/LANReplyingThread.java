@@ -101,7 +101,7 @@ public class LANReplyingThread extends Thread{
         mLANCheckStatusThread = new LANCheckStatusThread(mContext);
         mLANCheckStatusThread.start();
 
-        mLANConnectionThread = new LANConnectionThread(mContext);
+        mLANConnectionThread = new LANConnectionThread(mContext, 48184);
         mLANConnectionThread.start();
 
         try {

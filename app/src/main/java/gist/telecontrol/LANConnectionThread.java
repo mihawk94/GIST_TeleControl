@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.TimeoutException;
 
+import static android.R.attr.port;
+
 public class LANConnectionThread extends Thread{
 
     private Context mContext;
@@ -32,11 +34,15 @@ public class LANConnectionThread extends Thread{
     private ServerSocket mServerSocket;
     private Socket mSocket;
     private String mName, mLocalName;
+    private int mPort;
+    private HashSet<String> mNames;
     private ArrayList<LANExchangerThread> mLANExchangerThreads;
 
-    public LANConnectionThread(Context context){
+    public LANConnectionThread(Context context, int port){
         mLANExchangerThreads = new ArrayList<LANExchangerThread>();
         mContext = context;
+        mPort = port;
+        if(mPort == 48186) mNames = new HashSet<String>();
         mCode = 0;
     }
 
@@ -75,7 +81,7 @@ public class LANConnectionThread extends Thread{
             Log.d("Logging", "Creating serverSocket..");
             mServerSocket = new ServerSocket();
             mServerSocket.setReuseAddress(true);
-            mServerSocket.bind(new InetSocketAddress(48184));
+            mServerSocket.bind(new InetSocketAddress(mPort));
         }
         catch(IOException ioe){
             Log.d("Logging", "Error creating the serverSocket");
@@ -109,10 +115,20 @@ public class LANConnectionThread extends Thread{
                 return;
             }
 
-            LANExchangerThread listenerThread = new LANExchangerThread(mContext, mSocket);
+            LANExchangerThread listenerThread;
+
+            if(mPort == 48186){
+                listenerThread = new LANExchangerThread(mContext, mSocket, mPort, mNames);
+            }
+            else{
+                listenerThread = new LANExchangerThread(mContext, mSocket, mPort);
+            }
+
             listenerThread.start();
 
             mLANExchangerThreads.add(listenerThread);
+
+            Log.d("Logging", mPort + ": Exchanger threads: " + mLANExchangerThreads.size());
 
         }
     }
@@ -250,7 +266,7 @@ public class LANConnectionThread extends Thread{
             try{
                 bytes = tmpIn.read(reply);
                 Log.d("Logging", "" + bytes);
-            }
+            }/*
             catch(SocketTimeoutException te){
                 Log.d("Logging", "Waiting timeout");
                 try{
@@ -267,7 +283,7 @@ public class LANConnectionThread extends Thread{
                 intent.putExtra("message", "EXCHANGE_CLIENT: Timeout");
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 return;
-            }
+            }*/
             catch(IOException ioe){
                 finish();
                 //Information about the error
@@ -297,7 +313,10 @@ public class LANConnectionThread extends Thread{
 
     public void finish(){
 
+        Log.d("Logging", "Finishing thread..");
         mFinish = true;
+
+        Intent intent = new Intent("NETWORK_ERROR");
 
         if(mServerSocket != null){
             if(!mServerSocket.isClosed()){
@@ -305,7 +324,10 @@ public class LANConnectionThread extends Thread{
                     Log.d("Logging", "Closing serverSocket..");
                     mServerSocket.close();
                 } catch (IOException e) {
-                    //Give information about the error
+                    //Information about the error
+
+                    intent.putExtra("message", "CONNECT: Error while closing socket at exit");
+                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                     return;
                 }
             }
@@ -324,8 +346,12 @@ public class LANConnectionThread extends Thread{
                 try {
                     mSocket.close();
                 } catch (IOException e) {
-                    //Give information about the error
+                    //Information about the error
+
+                    intent.putExtra("message", "CONNECT: Error while closing socket at exit");
+                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                     return;
+
                 }
             }
         }

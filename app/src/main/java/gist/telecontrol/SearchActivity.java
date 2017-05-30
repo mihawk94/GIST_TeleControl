@@ -94,7 +94,7 @@ public class SearchActivity extends Activity {
         mConnectionFilter.addAction("STOP_CONNECTION");
         mConnectionFilter.addAction("NETWORK_ERROR");
 
-        mReceiver = new DataReceiver(this, mLANDeviceAdapter, mLANDeviceHashSet, mDeviceArrayList);
+        mReceiver = new DataReceiver(this, mLANDeviceAdapter, mDeviceArrayList, mLANDeviceHashSet);
     }
 
     private void setButtons(){
@@ -170,7 +170,6 @@ public class SearchActivity extends Activity {
             LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, mConnectionFilter);
             mRegisteredReceiver = true;
         }
-        //Update UI
     }
 
     protected void onStart(){

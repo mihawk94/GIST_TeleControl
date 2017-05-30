@@ -8,20 +8,29 @@ import android.util.Log;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 
 public class ConnectionService extends Service {
 
     private LANRequestingThread mLANRequestingThread;
     private LANReplyingThread mLANReplyingThread;
-    private LANConnectionThread mLANConnectionThread;
+    private LANConnectionThread mLANConnectionThread, mLANConnectionClientThread;
     private LANExchangerThread mLANExchangerThread;
 
     public int onStartCommand(Intent intent, int flags, int startId){
 
-        Log.d("Logging", "Service called");
+        Log.d("Logging", "Service called. Action: " + intent.getAction());
 
         if(mLANReplyingThread != null){
             if(mLANReplyingThread.isAlive()) Log.d("Logging", "Replying is alive");
+        }
+
+        if(mLANConnectionClientThread != null){
+            if(mLANConnectionClientThread.isAlive()) Log.d("Logging", "Client server socket is alive");
+        }
+
+        if(mLANConnectionThread != null){
+            if(mLANConnectionThread.isAlive()) Log.d("Logging", "Connection thread is alive");
         }
 
         switch(intent.getAction()){
@@ -32,9 +41,11 @@ public class ConnectionService extends Service {
                 break;
             case "Replying":
                 Log.d("Logging", "Replying called");
-
                 mLANReplyingThread = new LANReplyingThread(this, intent.getStringExtra("name"));
                 mLANReplyingThread.start();
+                Log.d("Logging", "Creating clients server socket...");
+                mLANConnectionClientThread = new LANConnectionThread(this, 48186);
+                mLANConnectionClientThread.start();
                 break;
             case "Connection":
                 Log.d("Logging", "Connection called");
@@ -43,9 +54,10 @@ public class ConnectionService extends Service {
                             InetAddress.getByName(intent.getStringExtra("address")),
                             intent.getStringExtra("localName"), intent.getStringExtra("name"));
                     mLANConnectionThread.start();
+                    Log.d("Logging", "Connection started!");
                 }
                 catch(UnknownHostException uhe){
-                    //Give information about the error
+                    Log.d("Logging", "Unknown host exception");
                 }
                 break;
             case "SendMessage":
@@ -65,10 +77,12 @@ public class ConnectionService extends Service {
             case "StopReplying":
 
                 Log.d("Logging", "Stopping replying...");
-                mLANReplyingThread.finish();
+                if(mLANReplyingThread != null) mLANReplyingThread.finish();
+                if(mLANConnectionClientThread != null) mLANConnectionClientThread.finish();
 
                 Intent enableButton_rep = new Intent("ENABLE_TVBUTTON");
                 LocalBroadcastManager.getInstance(this).sendBroadcast(enableButton_rep);
+                stopSelf();
 
                 break;
             case "StopConnection":
@@ -77,22 +91,78 @@ public class ConnectionService extends Service {
 
                 Intent finishConnection = new Intent("STOP_CONNECTION");
                 LocalBroadcastManager.getInstance(this).sendBroadcast(finishConnection);
+                stopSelf();
 
                 break;
             case "UpdateServerUI":
                 Log.d("Logging", "Checking for updates..");
+
+                Intent updateUI;
+
+                if(mLANConnectionClientThread != null){
+                    if(mLANConnectionClientThread.getLANExchangerThreads().size() > 0){
+                        for (int i = 0; i < mLANConnectionClientThread.getLANExchangerThreads().size(); i++){
+                            if(mLANConnectionClientThread.getLANExchangerThreads().get(i) == null) continue;
+                            Log.d("Logging", "Getting client: " + mLANConnectionClientThread.getLANExchangerThreads().get(i).getClientName());
+                            String data = mLANConnectionClientThread.getLANExchangerThreads().get(i).getData();
+                            String command = data.substring(data.indexOf(":") + 1, data.indexOf(" "));
+
+                            if(command.equals("NAME:")) updateUI = new Intent("LAN_RECEIVEDMSG");
+                            else if(command.equals("EXCHANGE_SERVER:")){
+                                updateUI = new Intent("NETWORK_ERROR");
+                            }
+                            else break;
+                            updateUI.putExtra("message", data);
+                            updateUI.putExtra("address", mLANConnectionClientThread.getLANExchangerThreads().get(i).getAddress());
+                            LocalBroadcastManager.getInstance(this).sendBroadcast(updateUI);
+                        }
+                    }
+                }
+
                 if(mLANReplyingThread != null){
                     if(mLANReplyingThread.getLANConnectionThread() != null){
-                        if(mLANReplyingThread.getLANConnectionThread().getLANExchangerThreads() != null){
+                        if(mLANReplyingThread.getLANConnectionThread().getLANExchangerThreads().size() > 0){
                             for(int i = 0; i < mLANReplyingThread.getLANConnectionThread().getLANExchangerThreads().size(); i++){
+                                if(mLANReplyingThread.getLANConnectionThread().getLANExchangerThreads().get(i) == null) continue;
                                 Log.d("Logging", "Getting device: " + mLANReplyingThread.getLANConnectionThread().getLANExchangerThreads().get(i).getAddress());
-                                Intent updateUI = new Intent("LAN_RECEIVEDMSG");
-                                Intent errorUI = new Intent("NETWORK_ERROR");
-                                updateUI.putExtra("message", mLANReplyingThread.getLANConnectionThread().getLANExchangerThreads().get(i).getData());
+                                String data = mLANReplyingThread.getLANConnectionThread().getLANExchangerThreads().get(i).getData();
+                                String command = data.substring(data.indexOf(":") + 1, data.indexOf(" "));
+                                //Hacer esto como dios manda.
+                                if(command.equals("NAME:")) updateUI = new Intent("LAN_RECEIVEDMSG");
+                                else if(command.equals("EXCHANGE_SERVER:")){
+                                    updateUI = new Intent("NETWORK_ERROR");
+                                }
+                                else break;
+                                updateUI.putExtra("message", data);
                                 updateUI.putExtra("address", mLANReplyingThread.getLANConnectionThread().getLANExchangerThreads().get(i).getAddress());
-                                errorUI.putExtra("message", mLANReplyingThread.getLANConnectionThread().getLANExchangerThreads().get(i).getData());
                                 LocalBroadcastManager.getInstance(this).sendBroadcast(updateUI);
-                                LocalBroadcastManager.getInstance(this).sendBroadcast(errorUI);
+                            }
+                        }
+                    }
+                }
+                break;
+            case "RemoveThreadServer":
+                if(mLANReplyingThread != null){
+                    if(mLANReplyingThread.getLANConnectionThread() != null){
+                        if(mLANReplyingThread.getLANConnectionThread().getLANExchangerThreads().size() > 0){
+                            for(int i = 0; i < mLANReplyingThread.getLANConnectionThread().getLANExchangerThreads().size(); i++){
+                                if(mLANReplyingThread.getLANConnectionThread().getLANExchangerThreads()
+                                        .get(i).getAddress().equals(intent.getStringExtra("address"))){
+                                    mLANReplyingThread.getLANConnectionThread().getLANExchangerThreads()
+                                            .remove(i);
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
+            case "RemoveThreadApp":
+                if(mLANConnectionClientThread != null){
+                    if(mLANConnectionClientThread.getLANExchangerThreads().size() > 0){
+                        for (int i = 0; i < mLANConnectionClientThread.getLANExchangerThreads().size(); i++){
+                            if(mLANConnectionClientThread.getLANExchangerThreads().get(i).getClientName()
+                                    .equals(intent.getStringExtra("name"))){
+                                mLANConnectionClientThread.getLANExchangerThreads().remove(i);
                             }
                         }
                     }
