@@ -123,6 +123,7 @@ public class MainActivity extends Activity {
             Intent i = new Intent(this, ConnectionService.class);
             i.setAction("StopRequesting");
             startService(i);
+            stopService(i);
         }
     }
 
@@ -132,6 +133,8 @@ public class MainActivity extends Activity {
             LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
             mRegisteredReceiver = false;
         }
+        Log.d("Logging", "Quitting the application...");
+        stopService(new Intent(this, ConnectionService.class));
     }
 
     protected void onResume(){

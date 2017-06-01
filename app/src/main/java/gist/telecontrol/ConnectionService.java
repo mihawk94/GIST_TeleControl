@@ -175,6 +175,10 @@ public class ConnectionService extends Service {
         return START_NOT_STICKY;
     }
 
+    public ArrayList<LANExchangerThread> getClientThreads(){
+        return mLANConnectionClientThread.getLANExchangerThreads();
+    }
+
     public IBinder onBind(Intent intent){
         return null;
     }

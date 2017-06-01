@@ -34,7 +34,7 @@ public class ControlActivity extends Activity{
         setButtons();
 
         ((TextView)(findViewById(R.id.main_title))).setText(getIntent().getStringExtra("localName"));
-        ((TextView)(findViewById(R.id.local_name))).setText("Controlling device: " + getIntent().getStringExtra("name"));
+        ((TextView)(findViewById(R.id.local_name))).setText("Controlling broker: " + getIntent().getStringExtra("name"));
 
         setResult(RESULT_OK);
 

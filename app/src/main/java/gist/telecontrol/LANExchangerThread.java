@@ -1,5 +1,6 @@
 package gist.telecontrol;
 
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
@@ -31,6 +32,8 @@ public class LANExchangerThread extends Thread{
     private boolean mFinish;
     private int mCode;
     private int mPort;
+    private String mAction;
+
     private HashSet<String> mNames;
 
     //Realizar cambios en EXCHANGE_SERVER para diferenciar Cliente de Control
@@ -42,6 +45,7 @@ public class LANExchangerThread extends Thread{
         mPort = port;
         mNames = names;
         mCode = 0;
+        mAction = "EXCHANGE_SERVER";
     }
 
     public LANExchangerThread(Context context, Socket socket, int port){
@@ -50,6 +54,7 @@ public class LANExchangerThread extends Thread{
         mAddress = mSocket.getInetAddress().getHostAddress();
         mPort = port;
         mCode = 0;
+        mAction = "EXCHANGE_SERVER";
     }
 
     public LANExchangerThread(Context context, Socket socket, String message){
@@ -57,6 +62,7 @@ public class LANExchangerThread extends Thread{
         mSocket = socket;
         mMessage = message;
         mCode = 1;
+        mAction = "EXCHANGE_CLIENT";
     }
 
     /*
@@ -75,7 +81,7 @@ public class LANExchangerThread extends Thread{
                 runServer();
                 break;
             case 1:
-                sendMessage();
+                sendMessage(mMessage);
                 break;
             case 2:
                 runClient();
@@ -113,6 +119,7 @@ public class LANExchangerThread extends Thread{
                 }
                 intent.putExtra("message", mData);
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+                if(mPort == 48184) disconnectClient();
                 return;
             }
             //Information about the error
@@ -125,6 +132,7 @@ public class LANExchangerThread extends Thread{
             }
             intent.putExtra("message", mData);
             LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+            if(mPort == 48184) disconnectClient();
             return;
         }
 
@@ -194,6 +202,7 @@ public class LANExchangerThread extends Thread{
                 }
                 intent.putExtra("message", mData);
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+                if(mPort == 48184) disconnectClient();
                 return;
             }
 
@@ -212,10 +221,12 @@ public class LANExchangerThread extends Thread{
                 }
                 intent.putExtra("message", mData);
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+                if(mPort == 48184) disconnectClient();
                 return;
             }
 
             //Enviar a la actividad que se ha recibido el mensaje.
+            //Echarle un ojo al borrar cliente, ya que envia un LAN_RECEIVEDMSG (debido a que en la aplicación cliente no se cierra la conexión)
 
             String data = new String(word);
 
@@ -249,10 +260,28 @@ public class LANExchangerThread extends Thread{
 
             intent.putExtra("address", mAddress);
             LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+
+            if(mPort == 48184){
+
+                mMessage = "CONNECTION_Address:" + mAddress + "/NAME: " + value;
+
+                if(((ConnectionService)mContext).getClientThreads().size() > 0){
+                    for (int i = 0; i < ((ConnectionService)mContext).getClientThreads().size(); i++){
+                        ((ConnectionService)mContext).getClientThreads()
+                                .get(i).sendMessage(mMessage);
+                    }
+                }
+
+            }
+
+
+
         }
     }
 
-    private void sendMessage(){
+    public void sendMessage(String message){
+
+        mMessage = message;
 
         OutputStream tmpOut;
 
@@ -267,12 +296,12 @@ public class LANExchangerThread extends Thread{
             }
             catch(IOException ioe){
                 //Information about the error
-                intent.putExtra("message", "EXCHANGE_CLIENT: Error while closing socket after an error");
+                intent.putExtra("message", mAction + ": Error while closing socket after an error");
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 return;
             }
             //Information about the error
-            intent.putExtra("message", "EXCHANGE_CLIENT: Error while creating socket output/writing output");
+            intent.putExtra("message", mAction + ": Error while creating socket output/writing output");
             LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
             return;
         }
@@ -313,6 +342,18 @@ public class LANExchangerThread extends Thread{
 
         }
         */
+    }
+
+    private void disconnectClient(){
+
+        mMessage = "DISCONNECTION_Address:/" + mAddress;
+
+        if(((ConnectionService)mContext).getClientThreads().size() > 0){
+            for (int i = 0; i < ((ConnectionService)mContext).getClientThreads().size(); i++){
+                ((ConnectionService)mContext).getClientThreads()
+                        .get(i).sendMessage(mMessage);
+            }
+        }
     }
 
     public void finish(){

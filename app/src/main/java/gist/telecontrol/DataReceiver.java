@@ -145,6 +145,7 @@ public class DataReceiver extends BroadcastReceiver{
                         .addToBackStack(null)
                         .commit();
                 */
+
                 Toast.makeText(mContext, "'" + value + "' is connected", Toast.LENGTH_SHORT).show();
                 break;
             case "48186:NAME:":
