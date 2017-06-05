@@ -109,27 +109,53 @@ public class LANExchangerThread extends Thread{
                 if(!mSocket.isClosed()) mSocket.close();
             }
             catch(IOException ioe){
+                finish();
                 //Information about the error
-                intent = new Intent("NETWORK_ERROR");
                 if(mPort == 48184){
                     mData = mPort + ":EXCHANGE_SERVER: Error while closing socket after an error: /" + mAddress;
+
+                    ((ConnectionService)mContext).addMessage("Device disconnected: " + mAddress);
+
+                    intent = new Intent("UPDATE_LOG");
+                    intent.putExtra("message", "Device disconnected: " + mAddress);
+                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 }
                 else{
-                    mData = mPort + ":EXCHANGE_SERVER: Error while closing socket after an error: /" + mName;
+                    mData = mPort + ":EXCHANGE_SERVER: Error while closing socket after an error: /";
+
+                    ((ConnectionService)mContext).addMessage("Client disconnected: " + mName);
+
+                    intent = new Intent("UPDATE_LOG");
+                    intent.putExtra("message", "Client disconnected: " + mName);
+                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 }
+                intent = new Intent("NETWORK_ERROR");
                 intent.putExtra("message", mData);
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 if(mPort == 48184) disconnectClient();
                 return;
             }
+            finish();
             //Information about the error
-            intent = new Intent("NETWORK_ERROR");
             if(mPort == 48184){
                 mData = mPort + ":EXCHANGE_SERVER: Error while creating socket input: /" + mAddress;
+
+                ((ConnectionService)mContext).addMessage("Device disconnected: " + mAddress);
+
+                intent = new Intent("UPDATE_LOG");
+                intent.putExtra("message", "Device disconnected: " + mAddress);
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
             }
             else{
-                mData = mPort + ":EXCHANGE_SERVER: Error while creating socket input: /" + mName;
+                mData = mPort + ":EXCHANGE_SERVER: Error while creating socket input: /";
+
+                ((ConnectionService)mContext).addMessage("Client disconnected: " + mName);
+
+                intent = new Intent("UPDATE_LOG");
+                intent.putExtra("message", "Client disconnected: " + mName);
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
             }
+            intent = new Intent("NETWORK_ERROR");
             intent.putExtra("message", mData);
             LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
             if(mPort == 48184) disconnectClient();
@@ -164,7 +190,9 @@ public class LANExchangerThread extends Thread{
 
         */
 
-        byte [] reply = new byte[1024];
+        mName = "";
+
+        byte [] reply = new byte[512];
         int bytes = 0;
         byte [] word;
 
@@ -193,13 +221,27 @@ public class LANExchangerThread extends Thread{
             catch(IOException ioe){
                 finish();
                 //Information about the error
-                intent = new Intent("NETWORK_ERROR");
                 if(mPort == 48184){
                     mData = mPort + ":EXCHANGE_SERVER: Error while reading input bytes /" + mAddress;
+                    ((ConnectionService)mContext).addMessage("Device disconnected: " + mAddress);
+
+                    intent = new Intent("UPDATE_LOG");
+                    intent.putExtra("message", "Device disconnected: " + mAddress);
+                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 }
                 else{
                     mData = mPort + ":EXCHANGE_SERVER: Error while reading input bytes: /" + mName;
+
+                    mNames.remove(mName);
+                    Log.d("Logging", mName + " has been removed");
+
+                    ((ConnectionService)mContext).addMessage("Client disconnected: " + mName);
+
+                    intent = new Intent("UPDATE_LOG");
+                    intent.putExtra("message", "Client disconnected: " + mName);
+                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 }
+                intent = new Intent("NETWORK_ERROR");
                 intent.putExtra("message", mData);
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 if(mPort == 48184) disconnectClient();
@@ -212,13 +254,25 @@ public class LANExchangerThread extends Thread{
             else{
                 finish();
                 //Information about the error
-                intent = new Intent("NETWORK_ERROR");
                 if(mPort == 48184){
                     mData = mPort + ":EXCHANGE_SERVER: Disconnection: /" + mAddress;
+                    ((ConnectionService)mContext).addMessage("Device disconnected: " + mAddress);
+
+                    intent = new Intent("UPDATE_LOG");
+                    intent.putExtra("message", "Device disconnected: " + mAddress);
+                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 }
                 else{
+                    mNames.remove(mName);
+                    Log.d("Logging", mName + " has been removed");
                     mData = mPort + ":EXCHANGE_SERVER: Disconnection: /" + mName;
+                    ((ConnectionService)mContext).addMessage("Client disconnected: " + mName);
+
+                    intent = new Intent("UPDATE_LOG");
+                    intent.putExtra("message", "Client disconnected: " + mName);
+                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 }
+                intent = new Intent("NETWORK_ERROR");
                 intent.putExtra("message", mData);
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 if(mPort == 48184) disconnectClient();
@@ -233,37 +287,51 @@ public class LANExchangerThread extends Thread{
             String command = data.substring(0, data.indexOf(" "));
             String value = data.substring(data.indexOf(" ") + 1);
 
+            Log.d("Logging", "Value: " + value);
+
             if(mPort == 48186){
-                if(mNames.contains(value)){
-                    Log.d("Logging", "Client: Name already exists");
-                    finish();
-                    //Information about the error
-                    intent = new Intent("NETWORK_ERROR");
-                    mData = mPort + ":EXCHANGE_SERVER: Name exists: /" + mName;
-                    intent.putExtra("message", mData);
-                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
-                    return;
+                if(command.equals("NAME:")){
+                    if(mNames.contains(value)){
+                        Log.d("Logging", "Client: Name already exists");
+                        finish();
+                        //Information about the error
+                        intent = new Intent("NETWORK_ERROR");
+                        mData = mPort + ":EXCHANGE_SERVER: Name exists: /" + mName;
+                        intent.putExtra("message", mData);
+                        LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+                        return;
+                    }
+                    else{
+                        Log.d("Logging", "Client: Adding name..");
+                        mNames.add(value);
+                        mName = value;
+                        ((ConnectionService)mContext).addMessage("A new client has been connected: " + mName);
+
+                        intent = new Intent("UPDATE_LOG");
+                        intent.putExtra("message", "A new client has been connected: " + mName);
+                        LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+                    }
                 }
-                else{
-                    Log.d("Logging", "Client: Adding name..");
-                    mNames.add(value);
-                    mName = value;
+            }
+            else{
+                if(command.equals("NAME:")){
+                    ((ConnectionService)mContext).addMessage("A new device has been connected: " + mAddress);
+
+                    intent = new Intent("UPDATE_LOG");
+                    intent.putExtra("message", "A new device has been connected: " + mAddress);
+                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
                 }
             }
 
-            intent = new Intent("LAN_RECEIVEDMSG");
+            if(command.equals("PRESS:")){
 
-            intent.putExtra("message", mPort + ":" + data);
+                ((ConnectionService)mContext).addMessage(mAddress + " pressed " + value);
 
-            //Guardar datos del controlador
-            if(command.equals("NAME:")) mData = mPort + ":" + data;
+                intent = new Intent("UPDATE_LOG");
+                intent.putExtra("message", mAddress + " pressed " + value);
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
 
-            intent.putExtra("address", mAddress);
-            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
-
-            if(mPort == 48184){
-
-                mMessage = "CONNECTION_Address:" + mAddress + "/NAME: " + value;
+                mMessage = "PRESS_Address:" + mAddress + "/ " + value;
 
                 if(((ConnectionService)mContext).getClientThreads().size() > 0){
                     for (int i = 0; i < ((ConnectionService)mContext).getClientThreads().size(); i++){
@@ -273,15 +341,108 @@ public class LANExchangerThread extends Thread{
                 }
 
             }
+            else if(command.equals("RELEASE:")){
 
+                ((ConnectionService)mContext).addMessage(mAddress + " released " + value);
 
+                intent = new Intent("UPDATE_LOG");
+                intent.putExtra("message", mAddress + " released " + value);
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+
+                mMessage = "RELEASE_Address:" + mAddress + "/ " + value;
+
+                if(((ConnectionService)mContext).getClientThreads().size() > 0){
+                    for (int i = 0; i < ((ConnectionService)mContext).getClientThreads().size(); i++){
+                        ((ConnectionService)mContext).getClientThreads()
+                                .get(i).sendMessage(mMessage);
+                    }
+                }
+
+            }
+            else if(command.equals("TOUCH_DOWN:")){
+                ((ConnectionService)mContext).addMessage(mAddress + " is touching the screen");
+
+                intent = new Intent("UPDATE_LOG");
+                intent.putExtra("message", mAddress + " is touching the screen");
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+
+                mMessage = "TOUCH_Address:" + mAddress + "/ " + value;
+
+                if(((ConnectionService)mContext).getClientThreads().size() > 0){
+                    for (int i = 0; i < ((ConnectionService)mContext).getClientThreads().size(); i++){
+                        ((ConnectionService)mContext).getClientThreads()
+                                .get(i).sendMessage(mMessage);
+                    }
+                }
+            }
+            else if(command.equals("TOUCH_MOVE:")){
+
+                mMessage = "TOUCH_Address:" + mAddress + "/ " + value;
+
+                if(((ConnectionService)mContext).getClientThreads().size() > 0){
+                    for (int i = 0; i < ((ConnectionService)mContext).getClientThreads().size(); i++){
+                        ((ConnectionService)mContext).getClientThreads()
+                                .get(i).sendMessage(mMessage);
+                    }
+                }
+            }
+            else if(command.equals("TOUCH_RELEASE:")){
+                ((ConnectionService)mContext).addMessage(mAddress + " released the screen");
+
+                intent = new Intent("UPDATE_LOG");
+                intent.putExtra("message", mAddress + " released");
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+
+                mMessage = "TOUCHRELEASE_Address:" + mAddress + "/ " + value;
+
+                if(((ConnectionService)mContext).getClientThreads().size() > 0){
+                    for (int i = 0; i < ((ConnectionService)mContext).getClientThreads().size(); i++){
+                        ((ConnectionService)mContext).getClientThreads()
+                                .get(i).sendMessage(mMessage);
+                    }
+                }
+            }
+
+            //Guardar datos del controlador
+            if(command.equals("NAME:")){
+
+                mName = value;
+
+                mData = mPort + ":" + data;
+                intent = new Intent("LAN_RECEIVEDMSG");
+
+                intent.putExtra("message", mData);
+
+                intent.putExtra("address", mAddress);
+                LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+
+                if(mPort == 48184){
+
+                    mMessage = "CONNECTION_Address:" + mAddress + "/NAME: " + value;
+
+                    if(((ConnectionService)mContext).getClientThreads().size() > 0){
+                        for (int i = 0; i < ((ConnectionService)mContext).getClientThreads().size(); i++){
+                            ((ConnectionService)mContext).getClientThreads()
+                                    .get(i).sendMessage(mMessage);
+                        }
+                    }
+
+                }
+                else{
+                    if(((ConnectionService)mContext).getDeviceThreads().size() > 0){
+                        for (int i = 0; i < ((ConnectionService)mContext).getDeviceThreads().size(); i++){
+                            mMessage = "CONNECTION_Address:" + ((ConnectionService)mContext).getDeviceThreads().get(i).getAddress()
+                                    + "/NAME: " + ((ConnectionService)mContext).getDeviceThreads().get(i).getAddressName();
+                            sendMessage(mMessage);
+                        }
+                    }
+                }
+            }
 
         }
     }
 
     public void sendMessage(String message){
-
-        mMessage = message;
 
         OutputStream tmpOut;
 
@@ -289,7 +450,9 @@ public class LANExchangerThread extends Thread{
 
         try{
             tmpOut = mSocket.getOutputStream();
-            tmpOut.write(mMessage.getBytes());
+            Log.d("Logging", "Sending message: " + message);
+            tmpOut.write(message.getBytes());
+            tmpOut.flush();
         } catch(IOException e){
             try{
                 if(!mSocket.isClosed()) mSocket.close();
@@ -305,6 +468,7 @@ public class LANExchangerThread extends Thread{
             LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
             return;
         }
+
 
     }
 
@@ -346,7 +510,7 @@ public class LANExchangerThread extends Thread{
 
     private void disconnectClient(){
 
-        mMessage = "DISCONNECTION_Address:/" + mAddress;
+        mMessage = "DISCONNECTION_Address:" + mAddress + "/";
 
         if(((ConnectionService)mContext).getClientThreads().size() > 0){
             for (int i = 0; i < ((ConnectionService)mContext).getClientThreads().size(); i++){
@@ -390,7 +554,7 @@ public class LANExchangerThread extends Thread{
         return mData;
     }
 
-    public String getClientName() {
+    public String getAddressName() {
         return mName;
     }
 

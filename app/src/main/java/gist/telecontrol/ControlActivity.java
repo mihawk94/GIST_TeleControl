@@ -7,7 +7,9 @@ import android.content.IntentFilter;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
+import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,6 +23,7 @@ public class ControlActivity extends Activity{
     private Button mVolDown;
     private Button mVolUp;
     private Button mChannelDown;
+    private View mTouch;
 
     public void onCreate(Bundle savedInstanceState) {
 
@@ -63,11 +66,13 @@ public class ControlActivity extends Activity{
         mVolDown = (Button)findViewById(R.id.vol_down);
         mVolUp = (Button)findViewById(R.id.vol_up);
         mChannelDown = (Button)findViewById(R.id.ch_down);
+        mTouch = (LinearLayout)findViewById(R.id.touch);
 
         mChannelUp.setOnTouchListener(mButtonListener);
         mVolDown.setOnTouchListener(mButtonListener);
         mVolUp.setOnTouchListener(mButtonListener);
         mChannelDown.setOnTouchListener(mButtonListener);
+        mTouch.setOnTouchListener(mButtonListener);
 
     }
 
@@ -93,6 +98,10 @@ public class ControlActivity extends Activity{
             LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, mConnectionFilter);
             mRegisteredReceiver = true;
         }
+
+        Intent i = new Intent(this, ConnectionService.class);
+        i.setAction("UpdateUI");
+        startService(i);
     }
 
     protected void onStart(){

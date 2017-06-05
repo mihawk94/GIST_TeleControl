@@ -36,6 +36,7 @@ public class LANConnectionThread extends Thread{
     private String mName, mLocalName;
     private int mPort;
     private HashSet<String> mNames;
+    private LANExchangerThread mLANExchangerThread;
     private ArrayList<LANExchangerThread> mLANExchangerThreads;
 
     public LANConnectionThread(Context context, int port){
@@ -198,7 +199,7 @@ public class LANConnectionThread extends Thread{
 
         LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
 
-        LANExchangerThread mLANExchangerThread = new LANExchangerThread(mContext, mSocket, "NAME: " + mLocalName);
+        mLANExchangerThread = new LANExchangerThread(mContext, mSocket, "NAME: " + mLocalName);
         mLANExchangerThread.start();
 
         InputStream tmpIn;
@@ -364,6 +365,10 @@ public class LANConnectionThread extends Thread{
 
     public ArrayList<LANExchangerThread> getLANExchangerThreads(){
         return mLANExchangerThreads;
+    }
+
+    public LANExchangerThread getLANExchangerThread(){
+        return mLANExchangerThread;
     }
 
 }

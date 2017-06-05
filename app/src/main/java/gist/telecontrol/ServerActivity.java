@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.method.ScrollingMovementMethod;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -41,6 +42,7 @@ public class ServerActivity extends FragmentActivity {
         setListeners();
 
         ((TextView)(findViewById(R.id.main_title))).setText(getIntent().getStringExtra("name") + ": attached devices");
+        ((TextView)(findViewById(R.id.log))).setMovementMethod(new ScrollingMovementMethod());
 
         Intent i = new Intent(this, ConnectionService.class);
         i.setAction("Replying");
@@ -87,6 +89,8 @@ public class ServerActivity extends FragmentActivity {
 
         mConnectionFilter.addAction("LAN_RECEIVEDMSG");
         mConnectionFilter.addAction("NETWORK_ERROR");
+        mConnectionFilter.addAction("UPDATE_LOG");
+        mConnectionFilter.addAction("UPDATE_ALL_LOG");
 
         mReceiver = new DataReceiver(this, mLANDeviceAdapter, mDeviceArrayList, mLANDeviceHashSet, mLANClientAdapter, mClientArrayList, mLANClientHashSet);
     }
@@ -123,7 +127,7 @@ public class ServerActivity extends FragmentActivity {
         }
 
         Intent i = new Intent(this, ConnectionService.class);
-        i.setAction("UpdateServerUI");
+        i.setAction("UpdateUI");
         startService(i);
     }
 

@@ -230,6 +230,48 @@ public class ButtonListener implements View.OnClickListener, View.OnTouchListene
                     i.putExtra("message", "RELEASE: CH_DOWN");
                     mContext.startService(i);
                 }
+            case R.id.touch:
+
+                Log.d("Logging", "Dimensions: " + v.getWidth() + "x" + v.getHeight());
+                float x, y;
+
+                if(event.getAction() == MotionEvent.ACTION_DOWN) {
+                    Log.d("Logging", "X: " + event.getX() + " Y: " + event.getY());
+                    x = event.getX()/v.getWidth();
+                    y = event.getY()/v.getHeight();
+                    if(x > 0.90) x = 0.90F;
+                    if(x < 0) x = 0.10F;
+                    if(y > 1) y = 0.90F;
+                    if(y < 0) y = 0.10F;
+                    Log.d("Logging", "%x: " + x + " %y: " + y);
+                    i = new Intent(mContext, ConnectionService.class);
+                    i.setAction("SendMessage");
+                    i.putExtra("message", "TOUCH_DOWN: X:" + x + " Y:" + y);
+                    mContext.startService(i);
+                }
+                /*
+                else if(event.getAction() == MotionEvent.ACTION_MOVE){
+                    Log.d("Logging", "X: " + event.getX() + " Y: " + event.getY());
+                    x = event.getX()/v.getWidth();
+                    y = event.getY()/v.getHeight();
+                    if(x > 1) x = 1;
+                    if(x < 0) x = 0;
+                    if(y > 1) y = 1;
+                    if(y < 0) y = 0;
+                    Log.d("Logging", "%x: " + x + " %y: " + y);
+                    i = new Intent(mContext, ConnectionService.class);
+                    i.setAction("SendMessage");
+                    i.putExtra("message", "TOUCH_MOVE: X:" + x + " Y:" + y);
+                    mContext.startService(i);
+                }
+                */
+                else if(event.getAction() == MotionEvent.ACTION_UP){
+                    Log.d("Logging", "Touch released");
+                    i = new Intent(mContext, ConnectionService.class);
+                    i.setAction("SendMessage");
+                    i.putExtra("message", "TOUCH_RELEASE: ");
+                    mContext.startService(i);
+                }
                 break;
         }
 

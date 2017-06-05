@@ -157,6 +157,16 @@ public class SearchActivity extends Activity {
     }
 
     protected void onPause(){
+        Log.d("Logging", "LAN: Search finished");
+        mHandler.setLANMessaging(false);
+        if(getDynamicUIThread() != null) getDynamicUIThread().finish();
+        //Stop search
+        Intent i = new Intent(this, ConnectionService.class);
+        i.setAction("StopRequesting");
+        this.startService(i);
+        //change button text
+        ((Button)findViewById(R.id.lan_btn)).setText("SEARCH");
+        ((TextView)findViewById(R.id.lan_devices_text)).setText("Touch the button to start searching");
         super.onPause();
         if (mRegisteredReceiver){
             LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);

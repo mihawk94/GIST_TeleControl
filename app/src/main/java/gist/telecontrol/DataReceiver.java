@@ -27,6 +27,7 @@ public class DataReceiver extends BroadcastReceiver{
     private ArrayList<LANDevice> mDeviceArrayList, mClientArrayList;
     private HashSet<String> mLANDeviceHashSet, mLANClientHashSet;
     private FragmentManager mFragmentManager;
+    private String log;
 
     public DataReceiver(Context context){
         mContext = context;
@@ -71,6 +72,12 @@ public class DataReceiver extends BroadcastReceiver{
                 break;
             case "NETWORK_ERROR":
                 network_error(context, intent);
+                break;
+            case "UPDATE_LOG":
+                update_log(context, intent);
+                break;
+            case "UPDATE_ALL_LOG":
+                update_all_log(context, intent);
                 break;
             default:
                 break;
@@ -146,7 +153,7 @@ public class DataReceiver extends BroadcastReceiver{
                         .commit();
                 */
 
-                Toast.makeText(mContext, "'" + value + "' is connected", Toast.LENGTH_SHORT).show();
+                Toast.makeText(mContext, "Device '" + value + "' is connected", Toast.LENGTH_SHORT).show();
                 break;
             case "48186:NAME:":
                 Log.d("Logging", "New connection: " + value);
@@ -167,6 +174,8 @@ public class DataReceiver extends BroadcastReceiver{
                 Toast.makeText(mContext, "'" + value + "' is connected", Toast.LENGTH_SHORT).show();
                 break;
                 */
+                Toast.makeText(mContext, "Client '" + value + "' is connected", Toast.LENGTH_SHORT).show();
+                break;
             default:
                 break;
         }
@@ -390,7 +399,7 @@ public class DataReceiver extends BroadcastReceiver{
                 }
 
                 mClients.notifyDataSetChanged();
-                Toast.makeText(mContext, name, Toast.LENGTH_SHORT).show();
+                Toast.makeText(mContext, "Device '" + name + "' has been disconnected", Toast.LENGTH_SHORT).show();
 
                 removingThread = new Intent(mContext, ConnectionService.class);
                 removingThread.setAction("RemoveThreadApp");
@@ -406,6 +415,18 @@ public class DataReceiver extends BroadcastReceiver{
                 break;
             default:
                 break;
+        }
+    }
+
+    private void update_log(Context context, Intent intent){
+        CharSequence current = ((TextView)((ServerActivity)mContext).findViewById(R.id.log)).getText();
+        ((TextView)((ServerActivity)mContext).findViewById(R.id.log)).setText(current + "\n" + intent.getCharSequenceExtra("message"));
+    }
+
+    private void update_all_log(Context context, Intent intent){
+        CharSequence current = ((TextView)((ServerActivity)mContext).findViewById(R.id.log)).getText();
+        if(!current.equals(intent.getCharSequenceExtra("message"))){
+            ((TextView)((ServerActivity)mContext).findViewById(R.id.log)).setText(intent.getCharSequenceExtra("message"));
         }
     }
 }

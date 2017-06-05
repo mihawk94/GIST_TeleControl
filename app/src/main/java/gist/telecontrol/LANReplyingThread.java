@@ -152,6 +152,11 @@ public class LANReplyingThread extends Thread{
                 return;
             }
 
+            ((ConnectionService)mContext).addMessage("New reply: " + requestName);
+
+            intent = new Intent("UPDATE_LOG");
+            intent.putExtra("message", "New reply: " + requestName);
+            LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
         }
 
     }

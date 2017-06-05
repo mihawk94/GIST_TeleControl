@@ -53,7 +53,7 @@
                 android:gravity="center"
                 android:clipToPadding="false"
                 android:elevation="5dp"
-                android:background="@drawable/connected_layout">
+                android:background="@drawable/subtitles_server">
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -66,16 +66,45 @@
                 android:scrollbars="vertical"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:elevation="5dp"
+                android:elevation="3dp"
                 android:background="@drawable/list_background"></ListView>
         </LinearLayout>
-        <FrameLayout
-            android:id="@+id/fragment_container"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
             android:background="#607d8b"
-            android:layout_weight="1"/>
+            android:layout_weight="1"
+            android:clipToPadding="false">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:clipToPadding="false"
+                android:elevation="5dp"
+                android:background="@drawable/subtitles_server">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="5dp"
+                    android:text="Log"/>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="left"
+                android:clipToPadding="false"
+                android:elevation="2dp"
+                android:background="@color/colorPrimary">
+                <TextView
+                    android:id="@+id/log"
+                    android:gravity="bottom"
+                    android:scrollbars = "vertical"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="5dp"/>
+            </LinearLayout>
+        </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -89,7 +118,7 @@
                 android:gravity="center"
                 android:clipToPadding="false"
                 android:elevation="5dp"
-                android:background="@drawable/connected_layout">
+                android:background="@drawable/subtitles_server">
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -102,7 +131,7 @@
                 android:scrollbars="vertical"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:elevation="5dp"
+                android:elevation="3dp"
                 android:background="@drawable/list_background"></ListView>
         </LinearLayout>
     </LinearLayout>

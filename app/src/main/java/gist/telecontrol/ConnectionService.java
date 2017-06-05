@@ -15,7 +15,7 @@ public class ConnectionService extends Service {
     private LANRequestingThread mLANRequestingThread;
     private LANReplyingThread mLANReplyingThread;
     private LANConnectionThread mLANConnectionThread, mLANConnectionClientThread;
-    private LANExchangerThread mLANExchangerThread;
+    private CharSequence mLog = "";
 
     public int onStartCommand(Intent intent, int flags, int startId){
 
@@ -62,8 +62,15 @@ public class ConnectionService extends Service {
                 break;
             case "SendMessage":
                 Log.d("Logging", "Sending message..");
+                /*
                 mLANExchangerThread = new LANExchangerThread(this, mLANConnectionThread.getSocket(), intent.getStringExtra("message"));
                 mLANExchangerThread.start();
+                */
+                if(mLANConnectionThread != null){
+                    if(mLANConnectionThread.getLANExchangerThread() != null){
+                        mLANConnectionThread.getLANExchangerThread().sendMessage(intent.getStringExtra("message"));
+                    }
+                }
                 break;
             case "StopRequesting":
                 Log.d("Logging", "Stopping requesting..");
@@ -86,7 +93,7 @@ public class ConnectionService extends Service {
 
                 break;
             case "StopConnection":
-                mLANConnectionThread.finish();
+                if(mLANConnectionThread != null) mLANConnectionThread.finish();
                 Log.d("Logging", "Disconnected");
 
                 Intent finishConnection = new Intent("STOP_CONNECTION");
@@ -94,16 +101,28 @@ public class ConnectionService extends Service {
                 stopSelf();
 
                 break;
-            case "UpdateServerUI":
+            case "UpdateUI":
                 Log.d("Logging", "Checking for updates..");
 
                 Intent updateUI;
+
+                updateUI = new Intent("UPDATE_ALL_LOG");
+                updateUI.putExtra("message", mLog);
+                LocalBroadcastManager.getInstance(this).sendBroadcast(updateUI);
+
+                if(mLANConnectionThread != null){
+                    if(mLANConnectionThread.getSocket().isClosed()){
+                        updateUI = new Intent("NETWORK_ERROR");
+                        updateUI.putExtra("message", "EXCHANGE_CLIENT: Broker is disconnected");
+                        LocalBroadcastManager.getInstance(this).sendBroadcast(updateUI);
+                    }
+                }
 
                 if(mLANConnectionClientThread != null){
                     if(mLANConnectionClientThread.getLANExchangerThreads().size() > 0){
                         for (int i = 0; i < mLANConnectionClientThread.getLANExchangerThreads().size(); i++){
                             if(mLANConnectionClientThread.getLANExchangerThreads().get(i) == null) continue;
-                            Log.d("Logging", "Getting client: " + mLANConnectionClientThread.getLANExchangerThreads().get(i).getClientName());
+                            Log.d("Logging", "Getting client: " + mLANConnectionClientThread.getLANExchangerThreads().get(i).getAddressName());
                             String data = mLANConnectionClientThread.getLANExchangerThreads().get(i).getData();
                             String command = data.substring(data.indexOf(":") + 1, data.indexOf(" "));
 
@@ -141,6 +160,7 @@ public class ConnectionService extends Service {
                     }
                 }
                 break;
+
             case "RemoveThreadServer":
                 if(mLANReplyingThread != null){
                     if(mLANReplyingThread.getLANConnectionThread() != null){
@@ -160,7 +180,7 @@ public class ConnectionService extends Service {
                 if(mLANConnectionClientThread != null){
                     if(mLANConnectionClientThread.getLANExchangerThreads().size() > 0){
                         for (int i = 0; i < mLANConnectionClientThread.getLANExchangerThreads().size(); i++){
-                            if(mLANConnectionClientThread.getLANExchangerThreads().get(i).getClientName()
+                            if(mLANConnectionClientThread.getLANExchangerThreads().get(i).getAddressName()
                                     .equals(intent.getStringExtra("name"))){
                                 mLANConnectionClientThread.getLANExchangerThreads().remove(i);
                             }
@@ -177,6 +197,14 @@ public class ConnectionService extends Service {
 
     public ArrayList<LANExchangerThread> getClientThreads(){
         return mLANConnectionClientThread.getLANExchangerThreads();
+    }
+
+    public ArrayList<LANExchangerThread> getDeviceThreads(){
+        return mLANReplyingThread.getLANConnectionThread().getLANExchangerThreads();
+    }
+
+    public void addMessage(CharSequence message){
+        mLog = mLog + "\n" + message;
     }
 
     public IBinder onBind(Intent intent){
