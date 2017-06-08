@@ -24,6 +24,7 @@ public class ControlActivity extends Activity{
     private Button mVolUp;
     private Button mChannelDown;
     private View mTouch;
+    //private boolean mSent = true;
 
     public void onCreate(Bundle savedInstanceState) {
 
@@ -119,5 +120,16 @@ public class ControlActivity extends Activity{
             mRegisteredReceiver = false;
         }
     }
+
+    /*
+
+    public void setSent(boolean sent){
+        mSent = sent;
+    }
+
+    public boolean getSent(){
+        return mSent;
+    }
+    */
 
 }

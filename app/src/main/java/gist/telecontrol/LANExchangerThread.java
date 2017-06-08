@@ -286,6 +286,7 @@ public class LANExchangerThread extends Thread{
 
             String command = data.substring(0, data.indexOf(" "));
             String value = data.substring(data.indexOf(" ") + 1);
+            //String value = data.substring(data.indexOf(" ") + 1, data.indexOf("|"));
 
             Log.d("Logging", "Value: " + value);
 
@@ -420,6 +421,8 @@ public class LANExchangerThread extends Thread{
 
                     mMessage = "CONNECTION_Address:" + mAddress + "/NAME: " + value;
 
+                    Log.d("Logging", "New device connection at broker " + ((ConnectionService)mContext).getClientThreads().size());
+
                     if(((ConnectionService)mContext).getClientThreads().size() > 0){
                         for (int i = 0; i < ((ConnectionService)mContext).getClientThreads().size(); i++){
                             ((ConnectionService)mContext).getClientThreads()
@@ -509,6 +512,8 @@ public class LANExchangerThread extends Thread{
     }
 
     private void disconnectClient(){
+
+        Log.d("Logging", "New device disconnection at broker " + ((ConnectionService)mContext).getClientThreads().size());
 
         mMessage = "DISCONNECTION_Address:" + mAddress + "/";
 

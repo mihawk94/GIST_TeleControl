@@ -135,6 +135,14 @@ public class ButtonListener implements View.OnClickListener, View.OnTouchListene
 
     public boolean onTouch(View v, MotionEvent event){
 
+        /*
+        if(!((ControlActivity)mContext).getSent()){
+            if(!(event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL)){
+                return true;
+            }
+        }
+        */
+
         Intent i;
 
         switch(v.getId()){
@@ -230,6 +238,7 @@ public class ButtonListener implements View.OnClickListener, View.OnTouchListene
                     i.putExtra("message", "RELEASE: CH_DOWN");
                     mContext.startService(i);
                 }
+                break;
             case R.id.touch:
 
                 Log.d("Logging", "Dimensions: " + v.getWidth() + "x" + v.getHeight());
@@ -248,6 +257,7 @@ public class ButtonListener implements View.OnClickListener, View.OnTouchListene
                     i.setAction("SendMessage");
                     i.putExtra("message", "TOUCH_DOWN: X:" + x + " Y:" + y);
                     mContext.startService(i);
+                    return true;
                 }
                 /*
                 else if(event.getAction() == MotionEvent.ACTION_MOVE){
@@ -263,6 +273,7 @@ public class ButtonListener implements View.OnClickListener, View.OnTouchListene
                     i.setAction("SendMessage");
                     i.putExtra("message", "TOUCH_MOVE: X:" + x + " Y:" + y);
                     mContext.startService(i);
+                    return true;
                 }
                 */
                 else if(event.getAction() == MotionEvent.ACTION_UP){
@@ -271,11 +282,11 @@ public class ButtonListener implements View.OnClickListener, View.OnTouchListene
                     i.setAction("SendMessage");
                     i.putExtra("message", "TOUCH_RELEASE: ");
                     mContext.startService(i);
+                    return false;
                 }
-                break;
-        }
 
-        return true;
+        }
+        return false;
     }
 
     public DynamicUIThread getDynamicUIThread(){
