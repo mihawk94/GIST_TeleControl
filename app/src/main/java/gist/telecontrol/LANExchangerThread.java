@@ -376,6 +376,7 @@ public class LANExchangerThread extends Thread{
                     }
                 }
             }
+            /*
             else if(command.equals("TOUCH_MOVE:")){
 
                 mMessage = "TOUCH_Address:" + mAddress + "/ " + value;
@@ -387,6 +388,7 @@ public class LANExchangerThread extends Thread{
                     }
                 }
             }
+            */
             else if(command.equals("TOUCH_RELEASE:")){
                 ((ConnectionService)mContext).addMessage(mAddress + " released the screen");
 
